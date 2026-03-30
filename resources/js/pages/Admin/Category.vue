@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import Header from '@/components/btbcomponents/Header.vue';
+import Footer from '@/components/btbcomponents/Footer.vue';
 
 const categories = ref([]);
 console.log(categories);
@@ -20,6 +22,7 @@ const fetchCategories = () => {
 };
 </script>
 <template>
+    <Header />
     <div class="container">
         <h1>Category</h1>
         <p>This is the category page.</p>
@@ -29,4 +32,5 @@ const fetchCategories = () => {
             </li>
         </ul>
     </div>
+    <Footer />
 </template>
