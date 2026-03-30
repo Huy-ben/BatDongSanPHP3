@@ -16,9 +16,7 @@ const isMobileMenuOpen = ref(false)
         <div class="mx-auto flex h-24 w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
             <div class="flex items-center gap-9">
                 <a href="#" class="flex items-center" aria-label="Logo placeholder">
-                    <div class="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#FF9C22] text-base font-semibold text-[#FF9C22]">
-                        Logo
-                    </div>
+                    <img src="https://res.cloudinary.com/djbobb5oe/image/upload/v1774891267/BTB_Logo_lxnhfh_ainsl1_py1quw.png" alt="Logo" width="80"  />
                 </a>
 
                 <nav class="hidden items-center gap-8 lg:flex">
