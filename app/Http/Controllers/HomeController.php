@@ -9,5 +9,5 @@ class HomeController extends Controller
     public function home()
     {
         return inertia('Client/Home');
-    } 
+    }
 }

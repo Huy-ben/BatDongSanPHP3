@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
-Route::inertia('/', 'Welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
+// Route::inertia('/', 'Welcome', [
+//     'canRegister' => Features::enabled(Features::registration()),
+// ])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
@@ -15,9 +15,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Home
-Route::inertia('home', 'Client/Home')->name('home');
+Route::inertia('/', 'Client/Home')->name('home');
 Route::inertia('post-detail', 'Client/PostDetail')->name('post-detail');
 Route::get('api/category', [App\Http\Controllers\Api\CategoryController::class, 'index'])->name('categoryApi');
-
+Route::get('api/home', [App\Http\Controllers\Api\HomeController::class, 'data'])->name('homeApi');
 require __DIR__.'/settings.php';
 

@@ -1,7 +1,23 @@
 <script setup>
 import { computed, ref } from 'vue';
+import axios from 'axios';
 import ClientLayout from '@/layouts/ClientLayout.vue';
 import Footer from '@/components/btbcomponents/Footer.vue';
+import { onMounted } from 'vue';
+const posts = ref([]);
+onMounted(() => {
+    fetchPosts();
+});
+const fetchPosts = () => {
+    axios.get('/api/home')
+        .then(response => {
+            posts.value = response.data;
+            console.log('Fetched posts:', posts.value);
+        })
+        .catch(error => {
+            console.error('Error fetching posts:', error);
+        });
+};
 
 const categories = [
     { label: 'Căn hộ', icon: 'fa-building' },
@@ -434,16 +450,17 @@ function handleLoadMore() {
                         class="grid grid-cols-1 gap-5 sm:grid-cols-2 md:gap-6 lg:grid-cols-4"
                     >
                         <div
-                            v-for="house in visibleHouses"
-                            :key="house.id"
+                            v-for="post in posts"
+                            :key="post.id"
                             class="product-item group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-xl"
                             :class="{ 'animate-fadeIn': showAllHouses }"
                         >
+                        <a href="/post-detail">
                             <div class="relative h-48 overflow-hidden md:h-52">
                                 <img
-                                    :src="house.img"
+                                    :src="post.img"
                                     class="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                                    :alt="house.title"
+                                    :alt="post.title"
                                 />
                                 <div
                                     class="absolute top-3 left-3 rounded bg-red-600 px-2 py-1 text-[10px] font-bold text-white"
@@ -451,19 +468,20 @@ function handleLoadMore() {
                                     HOT
                                 </div>
                             </div>
+                            </a>
                             <div class="p-5">
                                 <h3
                                     class="mb-2 truncate font-bold text-gray-800"
                                 >
-                                    {{ house.title }}
+                                    {{ post.title }}
                                 </h3>
                                 <div class="flex items-center justify-between">
                                     <span
                                         class="text-lg font-bold text-red-600"
-                                        >{{ house.price }}</span
+                                        >{{ post.price }}</span
                                     >
                                     <span class="text-sm text-gray-400">{{
-                                        house.area
+                                        post.area
                                     }}</span>
                                 </div>
                                 <div
@@ -473,12 +491,12 @@ function handleLoadMore() {
                                         ><i
                                             class="fa-solid fa-location-dot"
                                         ></i>
-                                        {{ house.location }}</span
+                                        {{ post.address }}</span
                                     >
                                     <i
-                                        @click="toggleHotFavorite(house.id)"
+                                        @click="toggleHotFavorite(post.id)"
                                         :class="[
-                                            hotFavorites.has(house.id)
+                                            hotFavorites.has(post.id)
                                                 ? 'fa-solid heart-active'
                                                 : 'fa-regular',
                                             'fa-heart',

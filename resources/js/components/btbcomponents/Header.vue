@@ -2,7 +2,8 @@
 import { ref } from 'vue'
 
 const navItems = [
-    { label: 'Nhà đất bán', active: true },
+    { label: 'Trang chủ', active: true },
+    { label: 'Nhà đất bán', active: false },
     { label: 'Nhà đất cho thuê', active: false },
     { label: 'Dự án', active: false },
     { label: 'Tin tức', active: false },
@@ -15,7 +16,7 @@ const isMobileMenuOpen = ref(false)
     <header class="border-b border-zinc-200 bg-white text-zinc-900">
         <div class="mx-auto flex h-24 w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
             <div class="flex items-center gap-9">
-                <a href="#" class="flex items-center" aria-label="Logo placeholder">
+                <a href="/" class="flex items-center" aria-label="Logo placeholder">
                     <img src="https://res.cloudinary.com/djbobb5oe/image/upload/v1774891267/BTB_Logo_lxnhfh_ainsl1_py1quw.png" alt="Logo" width="80"  />
                 </a>
 
