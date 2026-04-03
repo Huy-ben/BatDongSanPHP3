@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->comment('ID người dùng');
             $table->unsignedBigInteger('product_id')->comment('ID sản phẩm');
             $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('product_id')->references('id')->on('products');
+            $table->foreign('product_id')->references('id')->on('posts')->onDelete('cascade');
             $table->timestamps();
         });
     }

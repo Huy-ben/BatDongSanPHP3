@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('product_id')->comment('ID sản phẩm');
             $table->string('image_url', 255)->comment('URL hình ảnh');
             $table->boolean('is_thumbnail')->default(false)->comment('Ảnh chính');
-            $table->foreign('product_id')->references('id')->on('products');
+            $table->foreign('product_id')->references('id')->on('posts')->onDelete('cascade');
             $table->timestamps();
         });
     }

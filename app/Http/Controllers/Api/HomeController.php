@@ -10,7 +10,7 @@ class HomeController extends Controller
 {
     public function data()
     {
-        $posts = DB::table('products')->get();
+        $posts = DB::table('posts')->get();
         return response()->json($posts);
     }
 }

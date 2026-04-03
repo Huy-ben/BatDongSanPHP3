@@ -10,12 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('posts', function (Blueprint $table) {
             $table->id();
             $table->string('title', 255)->comment('Tên sản phẩm');
             $table->unsignedBigInteger('seller_id')->comment('ID người bán');
             $table->unsignedBigInteger('category_id')->comment('ID danh mục');
-            $table->decimal('price', 20)->comment('Giá sản phẩm');
+            $table->decimal('price', 20, 0)->comment('Giá sản phẩm');
             $table->float('area')->comment('Diện tích');
             $table->string('address', 255)->comment('Địa chỉ');
             $table->enum('status', ['0', '1'])->default('1')->comment('0: Ẩn, 1: Hiện');
@@ -30,6 +30,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('products');
+        Schema::dropIfExists('posts');
     }
 };
