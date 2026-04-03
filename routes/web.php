@@ -17,7 +17,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Home
 Route::inertia('/', 'Client/Home')->name('home');
 // Post
-Route::inertia('post', 'Client/Post')->name('post');
+Route::inertia('post-sell', 'Client/PostSell')->name('post-sell');
+Route::inertia('post-rent', 'Client/PostRent')->name('post-rent');
 Route::inertia('post-detail', 'Client/PostDetail')->name('post-detail');
 Route::inertia('package', 'Client/Package')->name('package');
 Route::get('api/category', [App\Http\Controllers\Api\CategoryController::class, 'index'])->name('categoryApi');
