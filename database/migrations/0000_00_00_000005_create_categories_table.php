@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('category_name', 255)->unique()->comment('Tên danh mục');
             $table->text('description')->comment('Mô tả danh mục');
             $table->integer('parent_id')->nullable()->comment('ID danh mục cha');
+            $table->text('image')->nullable()->comment('Ảnh danh mục');
+            $table->enum('status', ['0', '1'])->default('1')->comment('0: Ẩn, 1: Hiện');
             $table->timestamps();
         });
     }

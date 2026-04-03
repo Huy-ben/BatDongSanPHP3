@@ -16,7 +16,7 @@ class PostSeeder extends Seeder
         DB::table('posts')->insert(
             [
                 'title' => 'Sản phẩm 5',
-                'seller_id' => 4,
+                'seller_id' => 1,
                 'category_id' => 17,
                 'price' => 100000,
                 'area' => 100,
