@@ -34,22 +34,22 @@ class Post extends Model
         $this->attributes['status'] = filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ? '1' : '0';
     }
 
-    public function seller(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id');
     }
 
-    public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
-    public function images(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function images(): HasMany
     {
         return $this->hasMany(Image::class, 'product_id');
     }
 
-    public function thumbnailImage(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function thumbnailImage(): HasOne
     {
         return $this->hasOne(Image::class, 'product_id')->where('is_thumbnail', true);
     }
