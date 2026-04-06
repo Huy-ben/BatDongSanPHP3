@@ -2,11 +2,10 @@
 import { ref } from 'vue'
 
 const navItems = [
-    { label: 'Trang chủ', active: true },
-    { label: 'Nhà đất bán', active: false },
-    { label: 'Nhà đất cho thuê', active: false },
-    { label: 'Dự án', active: false },
-    { label: 'Tin tức', active: false },
+    { label: 'Trang chủ', link: '/', active: true },
+    { label: 'Nhà đất bán', link: '/post-sell', active: false },
+    { label: 'Nhà đất cho thuê', link: '/post-rent', active: false },
+    { label: 'Tin tức', link: '/blog', active: false },
 ]
 
 const isMobileMenuOpen = ref(false)
@@ -24,7 +23,7 @@ const isMobileMenuOpen = ref(false)
                     <a
                         v-for="item in navItems"
                         :key="item.label"
-                        href="#"
+                        :href="item.link"
                         class="relative py-1 text-[17px] font-semibold transition-colors"
                         :class="item.active ? 'text-zinc-900 after:absolute after:-bottom-3 after:left-0 after:h-[3px] after:w-full after:rounded-full after:bg-[#FF9C22]' : 'text-zinc-700 hover:text-zinc-900'"
                     >
@@ -60,13 +59,13 @@ const isMobileMenuOpen = ref(false)
                     </span>
                 </button>
 
-                <button
-                    type="button"
+                <a
                     class="flex h-10 w-10 items-center justify-center rounded-full bg-[#FFF1E1] text-base font-bold text-[#B76300]"
                     aria-label="Tài khoản"
+                    href="/profile"
                 >
                     B
-                </button>
+                </a>
 
                 <button
                     type="button"
@@ -110,7 +109,7 @@ const isMobileMenuOpen = ref(false)
                 <a
                     v-for="item in navItems"
                     :key="`mobile-${item.label}`"
-                    href="#"
+                    :href="item.link"
                     class="block rounded-lg px-3 py-2 text-base font-medium transition-colors"
                     :class="item.active ? 'bg-[#FFF1E1] text-[#B76300]' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'"
                     @click="isMobileMenuOpen = false"
@@ -132,12 +131,12 @@ const isMobileMenuOpen = ref(false)
                 >
                     Thông báo
                 </button>
-                <button
-                    type="button"
+                <a
                     class="col-span-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-[#FF9C22] hover:text-[#B76300]"
+                    href="/profile"
                 >
                     Tài khoản
-                </button>
+                </a>
             </div>
 
             <button
@@ -151,7 +150,5 @@ const isMobileMenuOpen = ref(false)
 </template>
 
 <style scoped>
-:global(body) {
-    background: #ffffff;
-}
+
 </style>
