@@ -28,6 +28,8 @@ Route::get('contact', [ContactController::class, 'index'])->name('contact');
 Route::post('api/contact', [ContactController::class, 'send'])->name('contact.send');
 Route::inertia('profile', 'Client/Profile')->name('profile');
 Route::get('api/category', [App\Http\Controllers\Api\CategoryController::class, 'index'])->name('categoryApi');
+Route::get('api/blog', [App\Http\Controllers\Api\BlogController::class, 'index'])->name('blogApi');
+Route::get('api/blog/{blog}', [App\Http\Controllers\Api\BlogController::class, 'show'])->name('blogDetailApi');
 Route::get('api/home', [App\Http\Controllers\Api\HomeController::class, 'data'])->name('homeApi');
 require __DIR__.'/settings.php';
 
