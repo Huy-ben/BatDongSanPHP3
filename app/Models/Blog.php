@@ -7,12 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Blog extends Model
 {
     protected $fillable = [
-       'user_id',
-       'title',
-       'content',
-       'image',
-       'excerpt',
-       'status',
+        'user_id',
+        'title',
+        'slug',
+        'content',
+        'image',
+        'excerpt',
+        'status',
     ];
 
     protected $casts = [

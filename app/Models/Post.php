@@ -15,6 +15,7 @@ class Post extends Model
         'title',
         'seller_id',
         'category_id',
+        'slug',
         'price',
         'area',
         'address',
