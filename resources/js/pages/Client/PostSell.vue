@@ -4,7 +4,7 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
 
 <template>
     <ClientLayout>
-        <div class="min-h-screen bg-[#f8f9fa] text-gray-900 antialiased">
+        <div class="min-h-screen bg-gray-50 text-gray-900 antialiased">
             
             <header class="sticky top-0 z-50 border-b border-gray-200/60 bg-white/80 py-4 backdrop-blur-md shadow-sm">
                 <div class="container mx-auto max-w-6xl px-4 md:px-5">

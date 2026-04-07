@@ -96,7 +96,7 @@ onMounted(() => {
 
 <template>
   <ClientLayout>
-    <div class="min-h-screen text-slate-900">
+    <div class="min-h-screen bg-gray-50 text-slate-900">
       <main class="mx-auto max-w-6xl px-4 py-8 lg:px-8">
         <div class="mb-6 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
           <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-sm">

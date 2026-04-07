@@ -68,7 +68,7 @@ const deletePost = (id) => {
 <template>
     <ClientLayout>
         <div
-            class="min-h-screen bg-[#f8f9fc] pb-12 font-sans text-slate-900 antialiased"
+            class="min-h-screen bg-gray-50 pb-12 font-sans text-slate-900 antialiased"
         >
             <div class="container mx-auto max-w-5xl px-4 py-8">
                 <div
