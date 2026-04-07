@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('title', 255)->comment('Tên sản phẩm');
             $table->unsignedBigInteger('seller_id')->comment('ID người bán');
             $table->unsignedBigInteger('category_id')->comment('ID danh mục');
+            $table->string('slug', 255)->unique()->comment('Đường dẫn thân thiện với SEO');
             $table->decimal('price', 20, 0)->comment('Giá sản phẩm');
             $table->float('area')->comment('Diện tích');
             $table->string('address', 255)->comment('Địa chỉ');

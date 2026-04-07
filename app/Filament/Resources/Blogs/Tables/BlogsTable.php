@@ -40,6 +40,10 @@ class BlogsTable
                     ->badge()
                     ->color(fn($state) => BlogStatus::from($state)->getBadgeColor())
                 ,
+                TextColumn::make('slug')
+                    ->label('Slug')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->label('Ngày tạo')
                     ->dateTime()

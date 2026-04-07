@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id')->comment('ID người dùng tạo bài viết');
             $table->string('title', 255)->comment('Tiêu đề bài viết');
+            $table->string('slug', 255)->unique()->comment('Đường dẫn thân thiện với SEO');
             $table->text('content')->comment('Nội dung bài viết');
             $table->string('image')->nullable()->comment('Hình ảnh đại diện của bài viết');
             $table->text('excerpt')->nullable()->comment('Trích đoạn ngắn của bài viết');

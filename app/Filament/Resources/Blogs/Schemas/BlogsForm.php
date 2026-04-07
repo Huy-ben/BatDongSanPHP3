@@ -25,6 +25,11 @@ class BlogsForm
                     ->label('Trích dẫn')
                     ->placeholder('Nhập trích dẫn')
                     ->maxLength(255),
+                TextInput::make('slug')
+                    ->label('Slug')
+                    ->placeholder('Nhập slug (đường dẫn thân thiện với SEO)')
+                    ->required()
+                    ->maxLength(255),
                 RichEditor::make('content')
                     ->label('Nội dung bài viết')
                     ->placeholder('Nhập nội dung bài viết')

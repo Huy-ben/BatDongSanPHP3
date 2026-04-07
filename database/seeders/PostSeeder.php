@@ -17,6 +17,7 @@ class PostSeeder extends Seeder
             [
                 'title' => 'Sản phẩm 5',
                 'seller_id' => 1,
+                'slug' => 'san-pham-5',
                 'category_id' => 17,
                 'price' => 100000,
                 'area' => 100,

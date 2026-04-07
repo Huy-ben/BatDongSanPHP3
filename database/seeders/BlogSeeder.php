@@ -17,6 +17,7 @@ class BlogSeeder extends Seeder
             [
                 'user_id' => 1,
                 'title' => 'Bài viết 1',
+                'slug' => 'bai-viet-1',
                 'content' => 'Nội dung bài viết 1',
                 'image' => 'blog1.jpg',
                 'excerpt' => 'Trích dẫn bài viết 1',
@@ -25,6 +26,7 @@ class BlogSeeder extends Seeder
             [
                 'user_id' => 2,
                 'title' => 'Bài viết 2',
+                'slug' => 'bai-viet-2',
                 'content' => 'Nội dung bài viết 2',
                 'image' => 'blog2.jpg',
                 'excerpt' => 'Trích dẫn bài viết 2',
