@@ -153,12 +153,12 @@ const handleLogout = () => {
                     </Link>
                 </div>
 
-                <button
-                    type="button"
+                <Link
+                    href="/dang-tin"
                     class="rounded-xl border border-zinc-300 bg-white px-6 py-3 text-lg font-semibold text-zinc-900 transition hover:border-[#FF9C22] hover:text-[#B76300]"
                 >
                     Đăng tin
-                </button>
+                </Link>
             </div>
 
             <button

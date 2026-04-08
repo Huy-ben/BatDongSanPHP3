@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import axios from 'axios';
+import { Link } from '@inertiajs/vue3';
 import ClientLayout from '@/layouts/ClientLayout.vue';
 import Footer from '@/components/btbcomponents/Footer.vue';
 import { onMounted } from 'vue';
@@ -585,11 +586,17 @@ function handleLoadMore() {
                         </p>
                         <div class="mt-6 flex flex-wrap justify-center gap-3">
                             <a
-                                href="/packages"
+                                href="/package"
                                 class="rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:from-orange-600 hover:to-amber-600"
                             >
                                 Mua gói ngay
                             </a>
+                            <Link
+                                href="/dang-tin"
+                                class="rounded-full border border-orange-200 px-6 py-3 text-sm font-bold text-orange-600 transition hover:bg-orange-50"
+                            >
+                                Đăng tin ngay
+                            </Link>
                             <a
                                 href="/lien-he"
                                 class="rounded-full border border-orange-200 px-6 py-3 text-sm font-bold text-orange-600 transition hover:bg-orange-50"

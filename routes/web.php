@@ -22,6 +22,7 @@ Route::inertia('/', 'Client/Home')->name('home');
 Route::inertia('post-sell', 'Client/PostSell')->name('post-sell');
 Route::inertia('post-rent', 'Client/PostRent')->name('post-rent');
 Route::inertia('post-detail', 'Client/PostDetail')->name('post-detail');
+Route::inertia('dang-tin', 'Client/PostCreate')->name('post-create');
 Route::inertia('package', 'Client/Package')->name('package');
 Route::inertia('blog', 'Client/Blog')->name('blog');
 Route::inertia('blog-detail', 'Client/BlogDetail')->name('blog-detail');
