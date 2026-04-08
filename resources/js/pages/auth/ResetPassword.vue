@@ -20,10 +20,19 @@ const inputEmail = ref(props.email);
 
 <template>
     <AuthLayout
-        title="Reset password"
-        description="Please enter your new password below"
+        title="Đặt lại mật khẩu"
+        description="Vui lòng nhập mật khẩu mới để tiếp tục"
     >
-        <Head title="Reset password" />
+        <Head title="Đặt lại mật khẩu" />
+
+        <div class="mb-5 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
+            <p class="text-[11px] font-semibold tracking-[0.18em] text-orange-600 uppercase">
+                Xác thực tài khoản
+            </p>
+            <p class="mt-1 text-sm text-zinc-700">
+                Đảm bảo mật khẩu đủ mạnh để bảo vệ tài khoản của bạn.
+            </p>
+        </div>
 
         <Form
             v-bind="update.form()"
@@ -33,54 +42,54 @@ const inputEmail = ref(props.email);
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email">Email</Label>
+                    <Label for="email" class="text-zinc-800">Email</Label>
                     <Input
                         id="email"
                         type="email"
                         name="email"
                         autocomplete="email"
                         v-model="inputEmail"
-                        class="mt-1 block w-full"
+                        class="h-11 w-full rounded-xl border-zinc-200 bg-zinc-50 px-4 text-zinc-600"
                         readonly
                     />
                     <InputError :message="errors.email" class="mt-2" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password">Password</Label>
+                    <Label for="password" class="text-zinc-800">Mật khẩu mới</Label>
                     <PasswordInput
                         id="password"
                         name="password"
                         autocomplete="new-password"
-                        class="mt-1 block w-full"
+                        class="h-11 w-full rounded-xl border-zinc-200 bg-white px-4 focus-visible:border-orange-400 focus-visible:ring-orange-200"
                         autofocus
-                        placeholder="Password"
+                        placeholder="Tối thiểu 8 ký tự"
                     />
                     <InputError :message="errors.password" />
                 </div>
 
                 <div class="grid gap-2">
                     <Label for="password_confirmation">
-                        Confirm password
+                        Xác nhận mật khẩu mới
                     </Label>
                     <PasswordInput
                         id="password_confirmation"
                         name="password_confirmation"
                         autocomplete="new-password"
-                        class="mt-1 block w-full"
-                        placeholder="Confirm password"
+                        class="h-11 w-full rounded-xl border-zinc-200 bg-white px-4 focus-visible:border-orange-400 focus-visible:ring-orange-200"
+                        placeholder="Nhập lại mật khẩu"
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>
 
                 <Button
                     type="submit"
-                    class="mt-4 w-full"
+                    class="mt-2 h-11 w-full rounded-xl bg-[#FF9C22] text-white shadow-sm hover:bg-[#f28f13]"
                     :disabled="processing"
                     data-test="reset-password-button"
                 >
                     <Spinner v-if="processing" />
-                    Reset password
+                    Cập nhật mật khẩu
                 </Button>
             </div>
         </Form>

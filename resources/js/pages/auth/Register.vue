@@ -14,10 +14,19 @@ import { store } from '@/routes/register';
 
 <template>
     <AuthBase
-        title="Create an account"
-        description="Enter your details below to create your account"
+        title="Tạo tài khoản mới"
+        description="Tham gia BTB để lưu tin bất động sản và quản lý nhu cầu của bạn"
     >
-        <Head title="Register" />
+        <Head title="Đăng ký" />
+
+        <div class="mb-5 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
+            <p class="text-[11px] font-semibold tracking-[0.18em] text-orange-600 uppercase">
+                Thành viên mới
+            </p>
+            <p class="mt-1 text-sm text-zinc-700">
+                Hoàn tất thông tin bên dưới để bắt đầu đăng tin và theo dõi thị trường.
+            </p>
+        </div>
 
         <Form
             v-bind="store.form()"
@@ -27,7 +36,7 @@ import { store } from '@/routes/register';
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="name">Name</Label>
+                    <Label for="name" class="text-zinc-800">Họ và tên</Label>
                     <Input
                         id="name"
                         type="text"
@@ -36,13 +45,14 @@ import { store } from '@/routes/register';
                         :tabindex="1"
                         autocomplete="name"
                         name="name"
-                        placeholder="Full name"
+                        placeholder="Nguyen Van A"
+                        class="h-11 rounded-xl border-zinc-200 bg-white px-4 focus-visible:border-orange-400 focus-visible:ring-orange-200"
                     />
                     <InputError :message="errors.name" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
+                    <Label for="email" class="text-zinc-800">Email</Label>
                     <Input
                         id="email"
                         type="email"
@@ -50,56 +60,63 @@ import { store } from '@/routes/register';
                         :tabindex="2"
                         autocomplete="email"
                         name="email"
-                        placeholder="email@example.com"
+                        placeholder="ban@email.com"
+                        class="h-11 rounded-xl border-zinc-200 bg-white px-4 focus-visible:border-orange-400 focus-visible:ring-orange-200"
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password">Password</Label>
+                    <Label for="password" class="text-zinc-800">Mật khẩu</Label>
                     <PasswordInput
                         id="password"
                         required
                         :tabindex="3"
                         autocomplete="new-password"
                         name="password"
-                        placeholder="Password"
+                        placeholder="Tối thiểu 8 ký tự"
+                        class="h-11 rounded-xl border-zinc-200 bg-white px-4 focus-visible:border-orange-400 focus-visible:ring-orange-200"
                     />
                     <InputError :message="errors.password" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation">Confirm password</Label>
+                    <Label for="password_confirmation" class="text-zinc-800">Xác nhận mật khẩu</Label>
                     <PasswordInput
                         id="password_confirmation"
                         required
                         :tabindex="4"
                         autocomplete="new-password"
                         name="password_confirmation"
-                        placeholder="Confirm password"
+                        placeholder="Nhập lại mật khẩu"
+                        class="h-11 rounded-xl border-zinc-200 bg-white px-4 focus-visible:border-orange-400 focus-visible:ring-orange-200"
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>
 
+                <p class="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-xs leading-relaxed text-zinc-500">
+                    Bằng việc tạo tài khoản, bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của BTB.
+                </p>
+
                 <Button
                     type="submit"
-                    class="mt-2 w-full"
+                    class="mt-2 h-11 w-full rounded-xl bg-[#FF9C22] text-white shadow-sm hover:bg-[#f28f13]"
                     tabindex="5"
                     :disabled="processing"
                     data-test="register-user-button"
                 >
                     <Spinner v-if="processing" />
-                    Create account
+                    Tạo tài khoản
                 </Button>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground">
-                Already have an account?
+            <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-center text-sm text-zinc-600">
+                Đã có tài khoản?
                 <TextLink
                     :href="login()"
-                    class="underline underline-offset-4"
+                    class="font-semibold text-orange-600 hover:text-orange-700"
                     :tabindex="6"
-                    >Log in</TextLink
+                    >Đăng nhập</TextLink
                 >
             </div>
         </Form>

@@ -16,18 +16,18 @@ import type { TwoFactorConfigContent } from '@/types';
 const authConfigContent = computed<TwoFactorConfigContent>(() => {
     if (showRecoveryInput.value) {
         return {
-            title: 'Recovery code',
+            title: 'Mã khôi phục',
             description:
-                'Please confirm access to your account by entering one of your emergency recovery codes.',
-            buttonText: 'login using an authentication code',
+                'Xác nhận quyền truy cập bằng cách nhập một trong các mã khôi phục đã lưu.',
+            buttonText: 'dùng mã xác thực',
         };
     }
 
     return {
-        title: 'Authentication code',
+        title: 'Mã xác thực',
         description:
-            'Enter the authentication code provided by your authenticator application.',
-        buttonText: 'login using a recovery code',
+            'Nhập mã xác thực được tạo từ ứng dụng bảo mật của bạn.',
+        buttonText: 'dùng mã khôi phục',
     };
 });
 
@@ -47,7 +47,16 @@ const code = ref<string>('');
         :title="authConfigContent.title"
         :description="authConfigContent.description"
     >
-        <Head title="Two-factor authentication" />
+        <Head title="Xác thực hai lớp" />
+
+        <div class="mb-5 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
+            <p class="text-[11px] font-semibold tracking-[0.18em] text-orange-600 uppercase">
+                Xác thực 2 lớp
+            </p>
+            <p class="mt-1 text-sm text-zinc-700">
+                Thêm một lớp bảo vệ để đảm bảo an toàn cho tài khoản của bạn.
+            </p>
+        </div>
 
         <div class="space-y-6">
             <template v-if="!showRecoveryInput">
@@ -82,13 +91,13 @@ const code = ref<string>('');
                         <InputError :message="errors.code" />
                     </div>
                     <Button type="submit" class="w-full" :disabled="processing"
-                        >Continue</Button
+                        >Tiếp tục</Button
                     >
-                    <div class="text-center text-sm text-muted-foreground">
-                        <span>or you can </span>
+                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-center text-sm text-zinc-600">
+                        <span>Hoặc bạn có thể </span>
                         <button
                             type="button"
-                            class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                            class="font-semibold text-orange-600 underline underline-offset-4 hover:text-orange-700"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
                             {{ authConfigContent.buttonText }}
@@ -107,20 +116,21 @@ const code = ref<string>('');
                     <Input
                         name="recovery_code"
                         type="text"
-                        placeholder="Enter recovery code"
+                        placeholder="Nhập mã khôi phục"
+                        class="h-11 rounded-xl border-zinc-200 bg-white px-4 focus-visible:border-orange-400 focus-visible:ring-orange-200"
                         :autofocus="showRecoveryInput"
                         required
                     />
                     <InputError :message="errors.recovery_code" />
                     <Button type="submit" class="w-full" :disabled="processing"
-                        >Continue</Button
+                        >Tiếp tục</Button
                     >
 
-                    <div class="text-center text-sm text-muted-foreground">
-                        <span>or you can </span>
+                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-center text-sm text-zinc-600">
+                        <span>Hoặc bạn có thể </span>
                         <button
                             type="button"
-                            class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                            class="font-semibold text-orange-600 underline underline-offset-4 hover:text-orange-700"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
                             {{ authConfigContent.buttonText }}

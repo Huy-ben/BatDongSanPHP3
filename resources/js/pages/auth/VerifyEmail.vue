@@ -14,36 +14,50 @@ defineProps<{
 
 <template>
     <AuthLayout
-        title="Verify email"
-        description="Please verify your email address by clicking on the link we just emailed to you."
+        title="Xác minh email"
+        description="Vui lòng xác minh email bằng liên kết đã được gửi đến hộp thư của bạn."
     >
-        <Head title="Email verification" />
+        <Head title="Xác minh email" />
+
+        <div class="mb-5 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
+            <p class="text-[11px] font-semibold tracking-[0.18em] text-orange-600 uppercase">
+                Kích hoạt tài khoản
+            </p>
+            <p class="mt-1 text-sm text-zinc-700">
+                Kiểm tra email để hoàn tất đăng ký và sử dụng đầy đủ tính năng.
+            </p>
+        </div>
 
         <div
             v-if="status === 'verification-link-sent'"
-            class="mb-4 text-center text-sm font-medium text-green-600"
+            class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"
         >
-            A new verification link has been sent to the email address you
-            provided during registration.
+            Liên kết xác minh mới đã được gửi đến email bạn đã đăng ký.
         </div>
 
         <Form
             v-bind="send.form()"
-            class="space-y-6 text-center"
+            class="space-y-4 text-center"
             v-slot="{ processing }"
         >
-            <Button :disabled="processing" variant="secondary">
+            <Button
+                :disabled="processing"
+                class="h-11 w-full rounded-xl bg-[#FF9C22] text-white shadow-sm hover:bg-[#f28f13]"
+            >
                 <Spinner v-if="processing" />
-                Resend verification email
+                Gửi lại email xác minh
             </Button>
 
-            <TextLink
-                :href="logout()"
-                as="button"
-                class="mx-auto block text-sm"
-            >
-                Log out
-            </TextLink>
+            <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
+                Không phải tài khoản của bạn?
+                <TextLink
+                    :href="logout()"
+                    as="button"
+                    class="ml-1 font-semibold text-orange-600 hover:text-orange-700"
+                >
+                    Đăng xuất
+                </TextLink>
+            </div>
         </Form>
     </AuthLayout>
 </template>

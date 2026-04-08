@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Auth\GoogleLoginController;
 
 // Route::inertia('/', 'Welcome', [
 //     'canRegister' => Features::enabled(Features::registration()),
@@ -31,5 +32,6 @@ Route::get('api/category', [App\Http\Controllers\Api\CategoryController::class, 
 Route::get('api/blog', [App\Http\Controllers\Api\BlogController::class, 'index'])->name('blogApi');
 Route::get('api/blog/{blog}', [App\Http\Controllers\Api\BlogController::class, 'show'])->name('blogDetailApi');
 Route::get('api/home', [App\Http\Controllers\Api\HomeController::class, 'data'])->name('homeApi');
+Route::post('auth/google', GoogleLoginController::class)->middleware('guest')->name('auth.google');
 require __DIR__.'/settings.php';
 

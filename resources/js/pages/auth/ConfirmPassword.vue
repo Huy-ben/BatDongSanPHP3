@@ -11,10 +11,19 @@ import { store } from '@/routes/password/confirm';
 
 <template>
     <AuthLayout
-        title="Confirm your password"
-        description="This is a secure area of the application. Please confirm your password before continuing."
+        title="Xác nhận mật khẩu"
+        description="Đây là khu vực bảo mật. Vui lòng nhập lại mật khẩu để tiếp tục."
     >
-        <Head title="Confirm password" />
+        <Head title="Xác nhận mật khẩu" />
+
+        <div class="mb-5 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
+            <p class="text-[11px] font-semibold tracking-[0.18em] text-orange-600 uppercase">
+                Bảo mật nâng cao
+            </p>
+            <p class="mt-1 text-sm text-zinc-700">
+                Bước xác nhận này giúp bảo vệ thông tin quan trọng của bạn.
+            </p>
+        </div>
 
         <Form
             v-bind="store.form()"
@@ -23,14 +32,15 @@ import { store } from '@/routes/password/confirm';
         >
             <div class="space-y-6">
                 <div class="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password" class="text-zinc-800">Mật khẩu</Label>
                     <PasswordInput
                         id="password"
                         name="password"
-                        class="mt-1 block w-full"
+                        class="h-11 w-full rounded-xl border-zinc-200 bg-white px-4 focus-visible:border-orange-400 focus-visible:ring-orange-200"
                         required
                         autocomplete="current-password"
                         autofocus
+                        placeholder="Nhập mật khẩu hiện tại"
                     />
 
                     <InputError :message="errors.password" />
@@ -38,12 +48,12 @@ import { store } from '@/routes/password/confirm';
 
                 <div class="flex items-center">
                     <Button
-                        class="w-full"
+                        class="h-11 w-full rounded-xl bg-[#FF9C22] text-white shadow-sm hover:bg-[#f28f13]"
                         :disabled="processing"
                         data-test="confirm-password-button"
                     >
                         <Spinner v-if="processing" />
-                        Confirm password
+                        Xác nhận
                     </Button>
                 </div>
             </div>
