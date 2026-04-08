@@ -1,14 +1,53 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { Link, router, usePage } from '@inertiajs/vue3'
+import { computed, ref } from 'vue'
 
 const navItems = [
-    { label: 'Trang chủ', link: '/', active: true },
-    { label: 'Nhà đất bán', link: '/post-sell', active: false },
-    { label: 'Nhà đất cho thuê', link: '/post-rent', active: false },
-    { label: 'Tin tức', link: '/blog', active: false },
+    { label: 'Trang chủ', link: '/', match: 'exact' as const },
+    { label: 'Nhà đất bán', link: '/post-sell', match: 'prefix' as const },
+    { label: 'Nhà đất cho thuê', link: '/post-rent', match: 'prefix' as const },
+    { label: 'Tin tức', link: '/blog', match: 'prefix' as const },
 ]
 
 const isMobileMenuOpen = ref(false)
+const page = usePage()
+
+const currentPath = computed(() => {
+    const [pathWithoutQuery] = page.url.split('?')
+    if (!pathWithoutQuery) return '/'
+
+    if (pathWithoutQuery.length > 1 && pathWithoutQuery.endsWith('/')) {
+        return pathWithoutQuery.slice(0, -1)
+    }
+
+    return pathWithoutQuery
+})
+
+const menuItems = computed(() => {
+    return navItems.map((item) => {
+        const isActive =
+            item.match === 'exact'
+                ? currentPath.value === item.link
+                : currentPath.value === item.link || currentPath.value.startsWith(`${item.link}/`)
+
+        return {
+            ...item,
+            active: isActive,
+        }
+    })
+})
+
+const authUser = computed(() => page.props.auth?.user)
+const isAuthenticated = computed(() => Boolean(authUser.value))
+
+const userInitial = computed(() => {
+    const name = authUser.value?.name
+    return name?.charAt(0).toUpperCase() ?? 'B'
+})
+
+const handleLogout = () => {
+    router.post('/logout')
+}
 </script>
 
 <template>
@@ -20,15 +59,15 @@ const isMobileMenuOpen = ref(false)
                 </a>
 
                 <nav class="hidden items-center gap-8 lg:flex">
-                    <a
-                        v-for="item in navItems"
+                    <Link
+                        v-for="item in menuItems"
                         :key="item.label"
                         :href="item.link"
                         class="relative py-1 text-[17px] font-semibold transition-colors"
                         :class="item.active ? 'text-zinc-900 after:absolute after:-bottom-3 after:left-0 after:h-[3px] after:w-full after:rounded-full after:bg-[#FF9C22]' : 'text-zinc-700 hover:text-zinc-900'"
                     >
                         {{ item.label }}
-                    </a>
+                    </Link>
 
                     
                 </nav>
@@ -59,13 +98,60 @@ const isMobileMenuOpen = ref(false)
                     </span>
                 </button>
 
-                <a
-                    class="flex h-10 w-10 items-center justify-center rounded-full bg-[#FFF1E1] text-base font-bold text-[#B76300]"
-                    aria-label="Tài khoản"
-                    href="/profile"
-                >
-                    B
-                </a>
+                <div v-if="isAuthenticated" class="group relative">
+                    <a
+                        class="flex h-10 w-10 items-center justify-center rounded-full bg-[#FFF1E1] text-base font-bold text-[#B76300]"
+                        aria-label="Tài khoản"
+                        href="/profile"
+                    >
+                        {{ userInitial }}
+                    </a>
+
+                    <div
+                        class="pointer-events-none absolute right-0 top-full z-30 w-52 translate-y-2 rounded-xl border border-zinc-200 bg-white p-2 opacity-0 shadow-lg transition-all duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100"
+                    >
+                        <a
+                            href="/profile"
+                            class="block rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900"
+                        >
+                            Thông tin tài khoản
+                        </a>
+                        <a
+                            href="/favorites"
+                            class="block rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900"
+                        >
+                            Tin đã lưu
+                        </a>
+                        <a
+                            href="/my-posts"
+                            class="block rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900"
+                        >
+                            Tin của tôi
+                        </a>
+                        <button
+                            type="button"
+                            class="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+                            @click="handleLogout"
+                        >
+                            Đăng xuất
+                        </button>
+                    </div>
+                </div>
+
+                <div v-else class="flex items-center gap-3">
+                    <Link
+                        href="/login"
+                        class="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 transition hover:border-[#FF9C22] hover:text-[#B76300]"
+                    >
+                        Đăng nhập
+                    </Link>
+                    <Link
+                        href="/register"
+                        class="rounded-xl bg-[#FF9C22] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#f28f13]"
+                    >
+                        Đăng ký
+                    </Link>
+                </div>
 
                 <button
                     type="button"
@@ -106,8 +192,8 @@ const isMobileMenuOpen = ref(false)
             class="border-t border-zinc-200 bg-white px-4 pb-4 pt-3 sm:px-6 lg:hidden"
         >
             <nav class="space-y-1">
-                <a
-                    v-for="item in navItems"
+                <Link
+                    v-for="item in menuItems"
                     :key="`mobile-${item.label}`"
                     :href="item.link"
                     class="block rounded-lg px-3 py-2 text-base font-medium transition-colors"
@@ -115,7 +201,7 @@ const isMobileMenuOpen = ref(false)
                     @click="isMobileMenuOpen = false"
                 >
                     {{ item.label }}
-                </a>
+                </Link>
             </nav>
 
             <div class="mt-4 grid grid-cols-2 gap-2">
@@ -131,12 +217,35 @@ const isMobileMenuOpen = ref(false)
                 >
                     Thông báo
                 </button>
-                <a
-                    class="col-span-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-[#FF9C22] hover:text-[#B76300]"
-                    href="/profile"
-                >
-                    Tài khoản
-                </a>
+                <template v-if="isAuthenticated">
+                    <a
+                        class="col-span-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-[#FF9C22] hover:text-[#B76300]"
+                        href="/profile"
+                    >
+                        Tài khoản
+                    </a>
+                    <button
+                        type="button"
+                        class="col-span-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                        @click="handleLogout"
+                    >
+                        Đăng xuất
+                    </button>
+                </template>
+                <template v-else>
+                    <Link
+                        href="/login"
+                        class="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-center text-sm font-semibold text-zinc-700 transition hover:border-[#FF9C22] hover:text-[#B76300]"
+                    >
+                        Đăng nhập
+                    </Link>
+                    <Link
+                        href="/register"
+                        class="rounded-lg bg-[#FF9C22] px-3 py-2 text-center text-sm font-semibold text-white transition hover:bg-[#f28f13]"
+                    >
+                        Đăng ký
+                    </Link>
+                </template>
             </div>
 
             <button
