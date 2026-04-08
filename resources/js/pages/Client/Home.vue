@@ -175,7 +175,7 @@ function toggleHotFavorite(id) {
 function handleLoadMore() {
     loadClicks.value += 1;
     if (loadClicks.value > 1) {
-        window.location.href = 'tat-ca.html';
+        window.location.href = '/post-sell';
     }
 }
 </script>
@@ -184,7 +184,7 @@ function handleLoadMore() {
     <ClientLayout>
         <div class="home-page bg-gray-50 text-gray-900">
             <section
-                class="relative flex h-[420px] items-center justify-center md:h-[500px]"
+                class="relative flex min-h-105 items-center justify-center py-12 md:min-h-125 md:py-0"
             >
                 <img
                     src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop"
@@ -193,18 +193,18 @@ function handleLoadMore() {
                 />
                 <div class="absolute inset-0 bg-black/40"></div>
 
-                <div class="relative z-10 w-full max-w-4xl px-4 text-center">
+                <div class="relative z-10 w-full max-w-4xl px-4 text-center sm:px-6">
                     <h1
-                        class="mb-6 text-2xl font-extrabold text-white drop-shadow-2xl md:mb-8 md:text-4xl"
+                        class="mb-5 text-2xl font-extrabold text-white drop-shadow-2xl sm:mb-6 sm:text-3xl md:mb-8 md:text-4xl"
                     >
                         Bất động sản cho mọi nhu cầu
                     </h1>
 
                     <div
-                        class="overflow-hidden rounded-2xl border border-orange-100 bg-white/95 p-5 text-left shadow-2xl backdrop-blur md:p-6"
+                        class="overflow-hidden rounded-2xl border border-orange-100 bg-white/95 p-4 text-left shadow-2xl backdrop-blur sm:p-5 md:p-6"
                     >
                         <div
-                            class="mb-4 flex flex-wrap items-center justify-between gap-3 md:mb-5"
+                            class="mb-4 flex flex-col gap-3 md:mb-5 md:flex-row md:items-center md:justify-between"
                         >
                             <div
                                 class="flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-orange-600 uppercase"
@@ -215,9 +215,7 @@ function handleLoadMore() {
                                 >
                                 <span>Tìm kiếm nhanh</span>
                             </div>
-                            <div
-                                class="flex gap-2 text-[11px] font-medium text-gray-500"
-                            >
+                            <div class="flex flex-wrap gap-2 text-[11px] font-medium text-gray-500 md:justify-end">
                                 <span class="rounded-full bg-gray-100 px-3 py-1"
                                     >Cập nhật liên tục</span
                                 >
@@ -228,22 +226,17 @@ function handleLoadMore() {
                         </div>
 
                         <div
-                            class="mb-4 flex gap-3 text-sm font-bold tracking-wider uppercase md:mb-5 md:gap-4"
+                            class="mb-4 flex gap-2 overflow-x-auto text-sm font-bold tracking-wider uppercase md:mb-5 md:gap-4"
                         >
                             <button
-                                class="border-b-2 border-orange-600 px-3 pb-3 text-orange-600"
+                                class="shrink-0 border-b-2 border-orange-600 px-3 pb-3 text-orange-600"
                             >
                                 Nhà đất bán
                             </button>
                             <button
-                                class="px-3 pb-3 text-gray-500 transition hover:border-b-2 hover:border-orange-500 hover:text-orange-500"
+                                class="shrink-0 px-3 pb-3 text-gray-500 transition hover:border-b-2 hover:border-orange-500 hover:text-orange-500"
                             >
                                 Nhà đất cho thuê
-                            </button>
-                            <button
-                                class="px-3 pb-3 text-gray-500 transition hover:border-b-2 hover:border-orange-500 hover:text-orange-500"
-                            >
-                                Dự án
                             </button>
                         </div>
 
@@ -291,7 +284,7 @@ function handleLoadMore() {
 
                             <div class="md:col-span-3">
                                 <button
-                                    class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-3 font-bold text-white shadow-lg transition hover:from-orange-600 hover:to-amber-600"
+                                    class="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-orange-500 to-amber-500 py-3 font-bold text-white shadow-lg transition hover:from-orange-600 hover:to-amber-600"
                                 >
                                     <i class="fa-solid fa-search"></i> Tìm kiếm
                                     ngay
@@ -325,12 +318,12 @@ function handleLoadMore() {
 
             <section class="border-b border-gray-100 bg-white py-8">
                 <div class="container mx-auto px-4">
-                    <div class="flex flex-wrap justify-center gap-4 md:gap-8">
+                    <div class="grid grid-cols-3 gap-3 sm:flex sm:flex-wrap sm:justify-center sm:gap-4 md:gap-8">
                         <a
                             v-for="category in categories"
                             :key="category.label"
                             href="#"
-                            class="group flex flex-col items-center"
+                            class="group flex flex-col items-center rounded-xl border border-transparent py-2 transition hover:border-orange-100 hover:bg-orange-50 sm:py-0"
                         >
                             <div
                                 class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 transition-colors group-hover:bg-orange-50"
@@ -344,10 +337,7 @@ function handleLoadMore() {
                                     ]"
                                 ></i>
                             </div>
-                            <span
-                                class="mt-2 text-xs font-medium text-gray-600 group-hover:text-orange-600"
-                                >{{ category.label }}</span
-                            >
+                            <span class="mt-2 text-center text-xs font-medium text-gray-600 group-hover:text-orange-600">{{ category.label }}</span>
                         </a>
                     </div>
                 </div>
@@ -358,9 +348,7 @@ function handleLoadMore() {
                     <div
                         class="mb-8 flex items-center justify-between md:mb-10"
                     >
-                        <h2
-                            class="text-3xl font-black tracking-tighter uppercase"
-                        >
+                        <h2 class="text-2xl font-black tracking-tighter uppercase md:text-3xl">
                             Dự án tầm cỡ
                         </h2>
                         <div class="flex gap-2">
@@ -387,10 +375,10 @@ function handleLoadMore() {
                             v-for="project in projects"
                             :key="project.id"
                             data-card
-                            class="group relative w-[260px] flex-shrink-0 cursor-pointer snap-start md:w-[320px]"
+                            class="group relative w-60 shrink-0 cursor-pointer snap-start sm:w-65 md:w-80"
                         >
                             <div
-                                class="h-[380px] overflow-hidden rounded-3xl shadow-lg md:h-[420px]"
+                                class="h-85 overflow-hidden rounded-3xl shadow-lg sm:h-90 md:h-105"
                             >
                                 <img
                                     :src="project.image"
@@ -414,9 +402,7 @@ function handleLoadMore() {
                                         ></i>
                                     </button>
                                 </div>
-                                <div
-                                    class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-transparent to-transparent p-6"
-                                >
+                                <div class="absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black/90 via-transparent to-transparent p-6">
                                     <span
                                         class="text-xs font-bold text-orange-400 uppercase"
                                         >{{ project.badge }}</span
@@ -441,9 +427,7 @@ function handleLoadMore() {
 
             <section class="bg-gray-50 py-12 md:py-14">
                 <div class="container mx-auto max-w-6xl px-4">
-                    <h2
-                        class="mb-8 text-center text-3xl font-black uppercase md:mb-10"
-                    >
+                    <h2 class="mb-8 text-center text-2xl font-black uppercase md:mb-10 md:text-3xl">
                         Bất động sản HOT
                     </h2>
                     <div
@@ -512,7 +496,7 @@ function handleLoadMore() {
                         <button
                             id="btn-load-more"
                             @click="handleLoadMore"
-                            class="rounded-full border-2 border-orange-600 px-10 py-3 font-bold text-orange-600 shadow-lg transition-all hover:bg-orange-600 hover:text-white"
+                            class="w-full rounded-full border-2 border-orange-600 px-6 py-3 font-bold text-orange-600 shadow-lg transition-all hover:bg-orange-600 hover:text-white sm:w-auto sm:px-10"
                         >
                             {{ loadMoreLabel }}
                             <i
@@ -530,9 +514,7 @@ function handleLoadMore() {
 
             <section class="bg-white py-16">
                 <div class="container mx-auto px-4">
-                    <h2
-                        class="mb-12 text-center text-3xl font-black tracking-tighter uppercase"
-                    >
+                    <h2 class="mb-12 text-center text-2xl font-black tracking-tighter uppercase md:text-3xl">
                         Tin tức thị trường
                     </h2>
                     <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
@@ -576,30 +558,32 @@ function handleLoadMore() {
                 </div>
             </section>
 
-            <section class="py-12 md:py-14 bg-white">
+            <section class="bg-white py-12 md:py-14">
                 <div class="container mx-auto max-w-5xl px-4">
-                    <div class="rounded-2xl border border-orange-100 bg-white shadow-2xl p-8 md:p-10 text-center">
+                    <div class="rounded-2xl border border-orange-100 bg-white p-6 text-center shadow-2xl sm:p-8 md:p-10">
                         <p class="text-xs font-semibold uppercase tracking-[0.3em] text-orange-600">Đăng tin nhanh</p>
-                        <h3 class="mt-3 text-3xl md:text-4xl font-black leading-tight text-gray-900">Mua gói ngay để đăng bất động sản của bạn</h3>
-                        <p class="mt-3 max-w-2xl mx-auto text-sm md:text-base text-gray-600">
+                        <h3 class="mt-3 text-2xl font-black leading-tight text-gray-900 md:text-4xl">
+                            Mua gói ngay để đăng bất động sản của bạn
+                        </h3>
+                        <p class="mx-auto mt-3 max-w-2xl text-sm text-gray-600 md:text-base">
                             Tiếp cận hàng nghìn khách hàng tiềm năng mỗi ngày với tin đăng nổi bật, hỗ trợ hình ảnh sắc nét và báo cáo hiệu quả theo thời gian thực.
                         </p>
-                        <div class="mt-6 flex flex-wrap justify-center gap-3">
+                        <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
                             <a
                                 href="/package"
-                                class="rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:from-orange-600 hover:to-amber-600"
+                                class="rounded-full bg-linear-to-r from-orange-500 to-amber-500 px-6 py-3 text-center text-sm font-bold text-white shadow-lg transition hover:from-orange-600 hover:to-amber-600"
                             >
                                 Mua gói ngay
                             </a>
                             <Link
                                 href="/dang-tin"
-                                class="rounded-full border border-orange-200 px-6 py-3 text-sm font-bold text-orange-600 transition hover:bg-orange-50"
+                                class="rounded-full border border-orange-200 px-6 py-3 text-center text-sm font-bold text-orange-600 transition hover:bg-orange-50"
                             >
                                 Đăng tin ngay
                             </Link>
                             <a
                                 href="/lien-he"
-                                class="rounded-full border border-orange-200 px-6 py-3 text-sm font-bold text-orange-600 transition hover:bg-orange-50"
+                                class="rounded-full border border-orange-200 px-6 py-3 text-center text-sm font-bold text-orange-600 transition hover:bg-orange-50"
                             >
                                 Tư vấn miễn phí
                             </a>

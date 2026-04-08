@@ -6,7 +6,7 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
     <ClientLayout>
         <div class="min-h-screen bg-gray-50 text-gray-900 antialiased">
             
-            <header class="sticky top-0 z-50 border-b border-gray-200/60 bg-white/80 py-4 backdrop-blur-md shadow-sm">
+            <header class="sticky top-24 z-40 border-b border-gray-200/60 bg-white/80 py-4 backdrop-blur-md shadow-sm">
                 <div class="container mx-auto max-w-6xl px-4 md:px-5">
                     <div class="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-4">
                         

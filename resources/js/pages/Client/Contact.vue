@@ -71,16 +71,16 @@ const handleSubmit = async () => {
 
   <!-- ===================== HERO BANNER ===================== -->
   <section class="max-w-7xl mx-auto px-6 mb-10 fade-up">
-    <div class="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 h-48 flex items-center px-10">
+    <div class="relative rounded-2xl overflow-hidden bg-gradient-to-br from-brand-500 via-orange-500 to-amber-500 h-48 flex items-center px-10">
       <!-- Decorative circles -->
       <div class="absolute -right-10 -top-10 w-56 h-56 bg-orange-500 rounded-full opacity-10"></div>
       <div class="absolute right-32 bottom-0 w-32 h-32 bg-orange-400 rounded-full opacity-10"></div>
       <div class="absolute right-10 top-8 w-16 h-16 bg-orange-300 rounded-full opacity-10"></div>
 
       <div class="relative z-10">
-        <p class="text-orange-400 text-sm font-semibold uppercase tracking-widest mb-1">Kết nối với chúng tôi</p>
+        <p class="text-white text-sm font-semibold uppercase tracking-widest mb-1">Kết nối với chúng tôi</p>
         <h1 class="text-white text-3xl font-extrabold leading-tight">Liên hệ – BTB Bất động sản</h1>
-        <p class="text-gray-400 text-sm mt-2">Đội ngũ chuyên gia sẵn sàng tư vấn miễn phí 7 ngày / tuần</p>
+        <p class="text-white text-sm mt-2">Đội ngũ chuyên gia sẵn sàng tư vấn miễn phí 7 ngày / tuần</p>
       </div>
     </div>
   </section>

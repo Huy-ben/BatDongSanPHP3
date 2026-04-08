@@ -92,35 +92,28 @@ const teamMembers = [
                     </nav>
                 </div>
                 <div
-                    class="relative overflow-hidden rounded-3xl bg-linear-to-br from-zinc-900 via-zinc-800 to-zinc-900 px-7 py-12 md:px-12"
+                    class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-orange-500 to-amber-500 px-7 py-12 md:px-12"
                 >
                 
-                    <div
-                        class="absolute -top-12 -right-12 h-56 w-56 rounded-full bg-orange-500/15"
-                    ></div>
-                    <div
-                        class="absolute right-24 -bottom-12 h-40 w-40 rounded-full bg-amber-300/10"
-                    ></div>
-
                     <div
                         class="relative z-10 grid gap-10 md:grid-cols-12 md:items-center"
                     >
                         <div class="md:col-span-7">
                             <p
-                                class="mb-3 text-xs font-semibold tracking-[0.25em] text-orange-300 uppercase"
+                                class="mb-3 text-xs font-semibold tracking-[0.25em] text-orange-200 uppercase"
                             >
                                 BTB REAL ESTATE PLATFORM
                             </p>
                             <h1
-                                class="text-3xl leading-tight font-extrabold text-white md:text-5xl"
+                                class="text-3xl leading-tight font-extrabold text-slate-800 md:text-5xl"
                             >
                                 Không chỉ là đăng tin,
-                                <span class="text-orange-400"
+                                <span class="text-gray-200"
                                     >chúng tôi xây niềm tin giao dịch.</span
                                 >
                             </h1>
                             <p
-                                class="mt-5 max-w-2xl text-sm leading-relaxed text-zinc-300 md:text-base"
+                                class="mt-5 max-w-2xl text-sm leading-relaxed text-white md:text-base"
                             >
                                 BTB phát triển nền tảng bất động sản tập trung
                                 vào dữ liệu minh bạch, trải nghiệm người dùng và
@@ -131,7 +124,7 @@ const teamMembers = [
                             <div class="mt-8 flex flex-wrap gap-3">
                                 <a
                                     href="/post-sell"
-                                    class="rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                                    class="rounded-xl border border-orange-400/40 bg-zinc-800/75 px-5 py-3 text-sm font-semibold text-white transition hover:border-white hover:border-orange-500 hover:bg-zinc-800/80 hover:text-white"
                                 >
                                     Khám phá nhà đất bán
                                 </a>
@@ -146,7 +139,7 @@ const teamMembers = [
                                     class="rounded-2xl border border-zinc-700/70 bg-zinc-800/75 px-4 py-5"
                                 >
                                     <p
-                                        class="text-2xl font-extrabold text-orange-400 md:text-3xl"
+                                        class="text-2xl font-extrabold text-white md:text-3xl"
                                     >
                                         {{ item.value }}
                                     </p>

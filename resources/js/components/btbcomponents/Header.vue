@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
+import Label from '../ui/label/Label.vue'
 
 const navItems = [
     { label: 'Trang chủ', link: '/', match: 'exact' as const },
-    { label: 'Về chúng tôi', link: '/about-us', match: 'exact' as const },
     { label: 'Nhà đất bán', link: '/post-sell', match: 'prefix' as const },
     { label: 'Nhà đất cho thuê', link: '/post-rent', match: 'prefix' as const },
     { label: 'Tin tức', link: '/blog', match: 'prefix' as const },
+    { label: 'Về chúng tôi', link: '/about-us', match: 'exact' as const },
+    { label: 'Liên hệ', link: '/contact', match: 'exact' as const },
 ]
 
 const isMobileMenuOpen = ref(false)
@@ -52,7 +54,7 @@ const handleLogout = () => {
 </script>
 
 <template>
-    <header class="border-b border-zinc-200 bg-white text-zinc-900">
+    <header class="sticky top-0 z-50 border-b border-zinc-200 bg-white text-zinc-900">
         <div class="mx-auto flex h-24 w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
             <div class="flex items-center gap-9">
                 <a href="/" class="flex items-center" aria-label="Logo placeholder">
@@ -64,7 +66,7 @@ const handleLogout = () => {
                         v-for="item in menuItems"
                         :key="item.label"
                         :href="item.link"
-                        class="relative py-1 text-[17px] font-semibold transition-colors"
+                        class="relative py-1 text-[15px] font-semibold transition-colors"
                         :class="item.active ? 'text-zinc-900 after:absolute after:-bottom-3 after:left-0 after:h-[3px] after:w-full after:rounded-full after:bg-[#FF9C22]' : 'text-zinc-700 hover:text-zinc-900'"
                     >
                         {{ item.label }}
@@ -142,21 +144,15 @@ const handleLogout = () => {
                 <div v-else class="flex items-center gap-3">
                     <Link
                         href="/login"
-                        class="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 transition hover:border-[#FF9C22] hover:text-[#B76300]"
+                        class="rounded-xl border border-[#FF9C22] bg-[#FF9C22] px-3 py-2 text-[15px] font-semibold text-white transition hover:bg-[#f28f13]"
                     >
                         Đăng nhập
-                    </Link>
-                    <Link
-                        href="/register"
-                        class="rounded-xl bg-[#FF9C22] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#f28f13]"
-                    >
-                        Đăng ký
                     </Link>
                 </div>
 
                 <Link
                     href="/dang-tin"
-                    class="rounded-xl border border-zinc-300 bg-white px-6 py-3 text-lg font-semibold text-zinc-900 transition hover:border-[#FF9C22] hover:text-[#B76300]"
+                    class="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-[15px] font-semibold text-zinc-900 transition hover:border-[#FF9C22] hover:text-[#B76300]"
                 >
                     Đăng tin
                 </Link>
