@@ -26,6 +26,7 @@ Route::inertia('dang-tin', 'Client/PostCreate')->name('post-create');
 Route::inertia('package', 'Client/Package')->name('package');
 Route::inertia('blog', 'Client/Blog')->name('blog');
 Route::inertia('blog-detail', 'Client/BlogDetail')->name('blog-detail');
+Route::inertia('about-us', 'Client/AboutUs')->name('about-us');
 Route::get('contact', [ContactController::class, 'index'])->name('contact');
 Route::post('api/contact', [ContactController::class, 'send'])->name('contact.send');
 Route::inertia('profile', 'Client/Profile')->name('profile');

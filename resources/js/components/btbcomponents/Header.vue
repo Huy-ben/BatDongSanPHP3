@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 
 const navItems = [
     { label: 'Trang chủ', link: '/', match: 'exact' as const },
+    { label: 'Về chúng tôi', link: '/about-us', match: 'exact' as const },
     { label: 'Nhà đất bán', link: '/post-sell', match: 'prefix' as const },
     { label: 'Nhà đất cho thuê', link: '/post-rent', match: 'prefix' as const },
     { label: 'Tin tức', link: '/blog', match: 'prefix' as const },
