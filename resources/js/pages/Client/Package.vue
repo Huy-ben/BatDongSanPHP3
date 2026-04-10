@@ -1,8 +1,11 @@
 <script setup>
 import ClientLayout from '@/layouts/ClientLayout.vue';
+import { Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const openFaqIndexes = ref([]);
+const showTrialModal = ref(false);
+const trialForm = useForm({});
 
 const faqs = [
     {
@@ -35,6 +38,27 @@ const toggleFaq = (index) => {
 };
 
 const isFaqOpen = (index) => openFaqIndexes.value.includes(index);
+
+const openTrialModal = () => {
+    showTrialModal.value = true;
+};
+
+const closeTrialModal = () => {
+    if (trialForm.processing) {
+        return;
+    }
+
+    showTrialModal.value = false;
+};
+
+const confirmActivateTrial = () => {
+    trialForm.post('/payment/trial', {
+        preserveScroll: true,
+        onSuccess: () => {
+            showTrialModal.value = false;
+        },
+    });
+};
 </script>
 
 <template>
@@ -237,7 +261,9 @@ const isFaqOpen = (index) => openFaqIndexes.value.includes(index);
                         </div>
                         <div class="px-6 pb-6">
                             <button
-                                class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                                type="button"
+                                class="block w-full rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                                @click="openTrialModal"
                             >
                                 Dùng miễn phí
                             </button>
@@ -402,11 +428,12 @@ const isFaqOpen = (index) => openFaqIndexes.value.includes(index);
                             </div>
                         </div>
                         <div class="px-6 pb-6">
-                            <button
-                                class="w-full rounded-xl border border-orange-500 bg-orange-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
+                            <Link
+                                href="/thanh-toan?plan=vip"
+                                class="block w-full rounded-xl border border-orange-500 bg-orange-500 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-orange-600"
                             >
                                 Mua gói VIP →
-                            </button>
+                            </Link>
                         </div>
                     </article>
 
@@ -563,11 +590,12 @@ const isFaqOpen = (index) => openFaqIndexes.value.includes(index);
                             </div>
                         </div>
                         <div class="px-6 pb-6">
-                            <button
-                                class="w-full rounded-xl border border-slate-900 bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700"
+                            <Link
+                                href="/thanh-toan?plan=svip"
+                                class="block w-full rounded-xl border border-slate-900 bg-slate-900 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-slate-700"
                             >
                                 Mua gói SVIP →
-                            </button>
+                            </Link>
                         </div>
                     </article>
                 </section>
@@ -824,11 +852,12 @@ const isFaqOpen = (index) => openFaqIndexes.value.includes(index);
                         toàn quốc. Không cần cam kết dài hạn.
                     </p>
                     <div class="mt-6 flex flex-wrap justify-center gap-3">
-                        <button
+                        <Link
+                            href="/thanh-toan?plan=vip"
                             class="rounded-xl bg-orange-500 px-7 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
                         >
                             Mua gói ngay
-                        </button>
+                        </Link>
                         <button
                             class="rounded-xl border border-white/35 px-7 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
                         >
@@ -869,6 +898,43 @@ const isFaqOpen = (index) => openFaqIndexes.value.includes(index);
                     </article>
                 </section>
             </main>
+
+            <div
+                v-if="showTrialModal"
+                class="fixed inset-0 z-[60] grid place-items-center bg-slate-900/60 p-4"
+                @click.self="closeTrialModal"
+            >
+                <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                    <p class="text-xs font-semibold tracking-[0.15em] text-emerald-600 uppercase">
+                        Xác nhận dùng thử
+                    </p>
+                    <h3 class="mt-2 text-xl font-extrabold text-slate-900">
+                        Bạn chắc chắn muốn chọn gói Trial?
+                    </h3>
+                    <p class="mt-3 text-sm leading-relaxed text-slate-600">
+                        Gói Trial sẽ được kích hoạt ngay sau khi xác nhận. Bạn có thể nâng cấp lên gói VIP hoặc SVIP bất kỳ lúc nào.
+                    </p>
+
+                    <div class="mt-6 flex gap-3">
+                        <button
+                            type="button"
+                            class="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                            :disabled="trialForm.processing"
+                            @click="closeTrialModal"
+                        >
+                            Hủy
+                        </button>
+                        <button
+                            type="button"
+                            class="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
+                            :disabled="trialForm.processing"
+                            @click="confirmActivateTrial"
+                        >
+                            {{ trialForm.processing ? 'Đang kích hoạt...' : 'Xác nhận dùng thử' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
         </body>
     </ClientLayout>
 </template>

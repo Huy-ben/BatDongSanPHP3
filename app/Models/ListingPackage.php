@@ -33,6 +33,7 @@ class ListingPackage extends Model
         return ListingPackageFactory::new();
     }
 
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

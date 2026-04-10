@@ -6,6 +6,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+use App\Http\Controllers\PaymentController;
 
 // Route::inertia('/', 'Welcome', [
 //     'canRegister' => Features::enabled(Features::registration()),
@@ -29,6 +30,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('dang-tin', [PostController::class, 'store'])->name('post-store');
 });
 Route::inertia('package', 'Client/Package')->name('package');
+Route::inertia('thanh-toan', 'Client/Payment')->name('payment');
+Route::get('thanh-toan/ket-qua', [PaymentController::class, 'result'])->name('payment.result');
 Route::inertia('blog', 'Client/Blog')->name('blog');
 Route::inertia('blog-detail', 'Client/BlogDetail')->name('blog-detail');
 Route::inertia('about-us', 'Client/AboutUs')->name('about-us');
@@ -43,6 +46,12 @@ Route::get('api/category', [App\Http\Controllers\Api\CategoryController::class, 
 Route::get('api/blog', [App\Http\Controllers\Api\BlogController::class, 'index'])->name('blogApi');
 Route::get('api/blog/{blog}', [App\Http\Controllers\Api\BlogController::class, 'show'])->name('blogDetailApi');
 Route::get('api/home', [App\Http\Controllers\Api\HomeController::class, 'data'])->name('homeApi');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('payment/trial', [PaymentController::class, 'activateTrial'])->name('payment.trial.activate');
+    Route::post('payment/vnpay', [PaymentController::class, 'create'])->name('payment.vnpay.create');
+    Route::post('payment/result/consume', [PaymentController::class, 'consumeResult'])->name('payment.result.consume');
+});
+Route::get('payment/vnpay/return', [PaymentController::class, 'callback'])->name('payment.vnpay.return');
 Route::post('auth/google', GoogleLoginController::class)->middleware('guest')->name('auth.google');
 require __DIR__.'/settings.php';
 
