@@ -1,277 +1,364 @@
 <script setup>
-import { ref } from 'vue';
+import InputError from '@/components/InputError.vue';
 import ClientLayout from '@/layouts/ClientLayout.vue';
+import { useForm } from '@inertiajs/vue3';
+import axios from 'axios';
+import { computed, ref } from 'vue';
 
-// 1. Trạng thái giao diện
-const isGridView = ref(true);
-const isEditModalOpen = ref(false);
-
-// 2. Dữ liệu người dùng (Cập nhật tên Quốc Toàn)
-const userProfile = ref({
-    name: 'Quốc Toàn',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=QuocToan',
-    title: 'Chuyên viên cấp cao',
-    plan: 'VIP Platinum',
-    planExpiry: '31/12/2026',
-    phone: '0912 672 ***',
-    email: 'toan.quoc@btb.vn',
-    location: 'TP. Cần Thơ',
+const props = defineProps({
+    profile: {
+        type: Object,
+        required: true,
+    },
+    hasActivePackage: {
+        type: Boolean,
+        default: false,
+    },
+    activePackage: {
+        type: Object,
+        default: null,
+    },
+    posts: {
+        type: Object,
+        default: () => ({
+            data: [],
+            current_page: 1,
+            last_page: 1,
+            total: 0,
+            per_page: 12,
+        }),
+    },
 });
 
-// 3. Form chỉnh sửa (Bản sao của profile)
-const editForm = ref({ ...userProfile.value });
+const isGridView = ref(true);
+const isEditModalOpen = ref(false);
+const isUploadingAvatar = ref(false);
+const currentPage = ref(props.posts.current_page);
 
-// 4. Danh sách tin đăng
-const posts = ref([
-    {
-        id: 1,
-        image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=500',
-        type: 'Bán',
-        label: 'HOT',
-        price: '50 tỷ VND',
-        title: 'Penthouse thông 2 tầng có hồ bơi riêng biệt lập tại Thủ Đức',
-        location: 'TP. Thủ Đức',
-        area: '310 m²',
-        bedrooms: 4,
-    },
-    {
-        id: 2,
-        image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500',
-        type: 'Cho thuê',
-        label: 'NEW',
-        price: '25 triệu/tháng',
-        title: 'Căn hộ 3PN dự án Diamond Island - Full nội thất cao cấp',
-        location: 'Quận 2',
-        area: '120 m²',
-        bedrooms: 3,
-    },
-]);
+const form = useForm({
+    name: props.profile.name ?? '',
+    email: props.profile.email ?? '',
+    phone_number: props.profile.phone_number ?? '',
+});
 
-// 5. Logic xử lý
+const fallbackAvatar = computed(() => {
+    const seed = encodeURIComponent(form.name || 'User');
+
+    return `https://api.dicebear.com/7.x/initials/svg?seed=${seed}`;
+});
+
+const avatarPreview = computed(() => props.profile.avatar?.trim() || fallbackAvatar.value);
+
+const packageLabel = computed(() => {
+    const packageType = props.activePackage?.package_type;
+
+    if (packageType === '2') {
+        return 'SVIP';
+    }
+
+    if (packageType === '1') {
+        return 'VIP';
+    }
+
+    return 'Thường';
+});
+
+const packageTone = computed(() => {
+    if (packageLabel.value === 'SVIP') {
+        return 'bg-amber-100 text-amber-700 border-amber-200';
+    }
+
+    if (packageLabel.value === 'VIP') {
+        return 'bg-orange-100 text-orange-700 border-orange-200';
+    }
+
+    return 'bg-slate-100 text-slate-700 border-slate-200';
+});
+
+const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+        maximumFractionDigits: 0,
+    }).format(price || 0);
+};
+
 const openEditModal = () => {
-    editForm.value = { ...userProfile.value };
+    form.defaults({
+        name: props.profile.name ?? '',
+        email: props.profile.email ?? '',
+        phone_number: props.profile.phone_number ?? '',
+    });
+
+    form.reset();
+    form.clearErrors();
     isEditModalOpen.value = true;
 };
 
 const saveProfile = () => {
-    userProfile.value = { ...editForm.value };
-    isEditModalOpen.value = false;
+    form.patch('/profile', {
+        preserveScroll: true,
+        onSuccess: () => {
+            isEditModalOpen.value = false;
+        },
+    });
 };
 
-const deletePost = (id) => {
-    if (confirm('Sếp chắc chắn muốn xóa tin này chứ?')) {
-        posts.value = posts.value.filter((p) => p.id !== id);
+const uploadAvatar = (event) => {
+    const file = event.target.files[0];
+
+    if (!file) {
+        return;
     }
+
+    isUploadingAvatar.value = true;
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    axios
+        .post('/profile/avatar', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
+        .then(() => {
+            // Reload page to refresh avatar
+            window.location.reload();
+        })
+        .catch((error) => {
+            console.error('Upload error:', error);
+        })
+        .finally(() => {
+            isUploadingAvatar.value = false;
+        });
+};
+
+const goToPage = (page) => {
+    if (page < 1 || page > props.posts.last_page) {
+        return;
+    }
+
+    currentPage.value = page;
+    window.location.href = `/profile?page=${page}`;
 };
 </script>
 
 <template>
     <ClientLayout>
-        <div
-            class="min-h-screen bg-gray-50 pb-12 font-sans text-slate-900 antialiased"
-        >
-            <div class="container mx-auto max-w-5xl px-4 py-8">
-                <div
-                    class="mb-6 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
-                >
-                    <nav
-                        aria-label="Breadcrumb"
-                        class="flex items-center gap-2 text-sm"
-                    >
-                        <a
-                            href="/"
-                            class="font-medium text-slate-500 transition hover:text-slate-800"
-                            >Trang chủ</a
-                        >
-                        <span class="text-slate-300">/</span>
-                        <span class="font-semibold text-brand"
-                            >Thông tin cá nhân</span
-                        >
-                    </nav>
+        <div class="min-h-screen bg-slate-100 pb-10 text-slate-900">
+            <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+                <div class="overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-orange-500 to-amber-500 px-6 py-12 text-center text-white shadow-glow sm:px-10">
+                    <p class="text-xs font-semibold tracking-[0.24em] uppercase text-orange-100">Hồ sơ cá nhân</p>
+                    <h1 class="mt-3 text-2xl leading-tight font-black sm:text-3xl">Quản lý thông tin tài khoản và tin đăng của bạn</h1>
+                    <p class="mt-2 max-w-3xl text-sm text-slate-200 text-center mx-auto">
+                        Thông tin được đồng bộ với dữ liệu trong hệ thống. Chỉ tài khoản có gói đăng tin còn hiệu lực mới hiển thị danh sách bài đăng tại trang này.
+                    </p>
                 </div>
-                <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
-                    <div class="lg:col-span-4">
-                        <div
-                            class="sticky top-24 rounded-[2.5rem] border border-slate-100 bg-white p-6 shadow-sm"
-                        >
-                            <div
-                                class="flex flex-col items-center lg:items-start lg:text-left"
-                            >
-                                <div
-                                    class="mb-5 flex h-24 w-24 justify-center self-center overflow-hidden rounded-[2rem] shadow-lg ring-4 ring-orange-50"
-                                >
-                                    <img
-                                        :src="userProfile.avatar"
-                                        class="h-full w-full object-cover"
-                                    />
+
+                <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
+                    <div class="space-y-6 lg:col-span-4">
+                        <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                            <div class="flex flex-col items-center text-center">
+                                <div class="relative">
+                                    <img :src="avatarPreview" alt="avatar" class="h-24 w-24 rounded-2xl object-cover ring-4 ring-orange-100" />
+                                    <label
+                                        class="absolute bottom-0 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-orange-600 text-white shadow-lg transition hover:bg-orange-700"
+                                        :class="{ 'opacity-50 cursor-not-allowed': isUploadingAvatar }"
+                                    >
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            class="hidden"
+                                            @change="uploadAvatar"
+                                            :disabled="isUploadingAvatar"
+                                        />
+                                        <i v-if="!isUploadingAvatar" class="fa-solid fa-camera text-sm"></i>
+                                        <i v-else class="fa-solid fa-spinner animate-spin text-sm"></i>
+                                    </label>
                                 </div>
-
-                                <h1
-                                    class="w-full text-center text-xl font-black text-slate-900 italic"
-                                >
-                                    {{ userProfile.name }}
-                                </h1>
-
-                                <div
-                                    class="mt-3 w-full rounded-2xl bg-orange-500 px-4 py-2.5 text-xs font-bold tracking-widest text-white uppercase"
-                                >
-                                    <div class="">
-                                        <span
-                                            class="text-[13px] font-black tracking-tighter text-white uppercase italic"
-                                        >
-                                            <i
-                                                class="fa-solid fa-crown mr-1"
-                                            ></i>
-                                            {{ userProfile.plan }}
-                                        </span>
-                                    </div>
-
-                                    <p
-                                        class="ml-2 text-[11px] font-bold tracking-wide text-white uppercase"
-                                    >
-                                        Ngày hết hạn:
-                                        {{ userProfile.planExpiry }}
-                                    </p>
-                                </div>
-
-                                <div
-                                    class="w-full space-y-4 border-t border-slate-50 pt-8 text-[11px] font-bold tracking-tight text-slate-600 uppercase"
-                                >
-                                    <div
-                                        class="flex items-center gap-3 text-sm"
-                                    >
-                                        <i
-                                            class="fa-solid fa-phone w-5 text-orange-500"
-                                        ></i>
-                                        {{ userProfile.phone }}
-                                    </div>
-                                    <div
-                                        class="flex items-center gap-3 text-sm"
-                                    >
-                                        <i
-                                            class="fa-solid fa-envelope w-5 text-orange-500"
-                                        ></i>
-                                        {{ userProfile.email }}
-                                    </div>
-                                    <div
-                                        class="flex items-center gap-3 text-sm"
-                                    >
-                                        <i
-                                            class="fa-solid fa-location-dot w-5 text-orange-500"
-                                        ></i>
-                                        {{ userProfile.location }}
-                                    </div>
-                                </div>
-
-                                <button
-                                    @click="openEditModal"
-                                    class="mt-8 w-full rounded-2xl bg-slate-900 py-3 text-[10px] font-black tracking-widest text-white uppercase shadow-xl shadow-orange-100 transition hover:bg-orange-600"
-                                >
-                                    Chỉnh sửa hồ sơ
-                                </button>
+                                <h2 class="mt-4 text-xl font-black text-slate-900">{{ props.profile.name }}</h2>
+                                <p class="mt-1 text-sm text-slate-500">{{ props.profile.email }}</p>
                             </div>
-                        </div>
+
+                            <div class="mt-6 space-y-3 border-t border-slate-100 pt-5 text-sm">
+                                <div class="flex items-center gap-3 text-slate-700">
+                                    <i class="fa-solid fa-phone text-orange-500"></i>
+                                    <span>{{ props.profile.phone_number || 'Chưa cập nhật số điện thoại' }}</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-slate-700">
+                                    <i class="fa-solid fa-envelope text-orange-500"></i>
+                                    <span>{{ props.profile.email }}</span>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                @click="openEditModal"
+                                class="mt-6 w-full rounded-2xl bg-slate-900 px-4 py-3 text-xs font-bold tracking-[0.2em] text-white uppercase transition hover:bg-orange-600"
+                            >
+                                Chỉnh sửa thông tin
+                            </button>
+                        </section>
+
+                        <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="text-sm font-black tracking-wider uppercase text-slate-700">Gói đăng tin</h3>
+                                <span class="rounded-full border px-3 py-1 text-xs font-bold" :class="packageTone">{{ packageLabel }}</span>
+                            </div>
+
+                            <div v-if="props.hasActivePackage" class="mt-4 space-y-2 text-sm text-slate-700">
+                                <p>
+                                    Tên gói: <span class="font-semibold text-slate-900">{{ props.activePackage?.package_name }}</span>
+                                </p>
+                                <p>
+                                    Hết hạn: <span class="font-semibold text-slate-900">{{ props.activePackage?.expiry_date }}</span>
+                                </p>
+                            </div>
+
+                            <div v-else class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                                Bạn chưa có gói đăng bài còn hiệu lực.
+                            </div>
+
+                            <a
+                                href="/package"
+                                class="mt-5 inline-flex w-full items-center justify-center rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-xs font-bold tracking-[0.18em] text-orange-700 uppercase transition hover:bg-orange-100"
+                            >
+                                Mua hoặc gia hạn gói
+                            </a>
+                        </section>
                     </div>
 
                     <div class="lg:col-span-8">
-                        <div
-                            class="mb-6 flex items-center justify-between px-1"
-                        >
-                            <h3
-                                class="text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase italic"
-                            >
-                                Tin đã đăng
-                            </h3>
-                            <div
-                                class="flex rounded-2xl border border-slate-100 bg-white p-1.5 shadow-sm"
-                            >
-                                <button
-                                    @click="isGridView = true"
-                                    :class="[
-                                        'h-8 w-10 rounded-xl transition',
-                                        isGridView
-                                            ? 'bg-orange-50 text-orange-600'
-                                            : 'text-slate-300',
-                                    ]"
-                                >
-                                    <i
-                                        class="fa-solid fa-table-cells-large"
-                                    ></i>
-                                </button>
-                                <button
-                                    @click="isGridView = false"
-                                    :class="[
-                                        'h-8 w-10 rounded-xl transition',
-                                        !isGridView
-                                            ? 'bg-orange-50 text-orange-600'
-                                            : 'text-slate-300',
-                                    ]"
-                                >
-                                    <i class="fa-solid fa-list"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div
-                            :class="[
-                                'grid gap-6',
-                                isGridView
-                                    ? 'grid-cols-1 md:grid-cols-2'
-                                    : 'grid-cols-1',
-                            ]"
-                        >
-                            <div
-                                v-for="post in posts"
-                                :key="post.id"
-                                class="group relative overflow-hidden rounded-[2rem] border border-slate-100 bg-white transition hover:border-orange-200 hover:shadow-2xl"
-                            >
-                                <div
-                                    class="absolute top-4 right-4 z-20 flex gap-2 opacity-0 transition-all group-hover:opacity-100"
-                                >
-                                    <button
-                                        class="h-9 w-9 rounded-xl bg-white text-blue-600 shadow-lg transition hover:bg-blue-600 hover:text-white"
-                                    >
-                                        <i class="fa-solid fa-pen"></i>
-                                    </button>
-                                    <button
-                                        @click="deletePost(post.id)"
-                                        class="h-9 w-9 rounded-xl bg-white text-red-600 shadow-lg transition hover:bg-red-600 hover:text-white"
-                                    >
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
+                        <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <h3 class="text-base font-black text-slate-900">Tin đã đăng</h3>
+                                    <p class="text-sm text-slate-500">Tổng cộng {{ props.posts.total }} tin</p>
                                 </div>
-                                <div
-                                    :class="[isGridView ? '' : 'flex flex-row']"
-                                >
-                                    <div
+                                <div v-if="props.hasActivePackage" class="flex rounded-2xl border border-slate-200 p-1">
+                                    <button
+                                        type="button"
+                                        @click="isGridView = true"
                                         :class="[
-                                            isGridView
-                                                ? 'h-48 w-full'
-                                                : 'h-48 w-60',
-                                            'shrink-0 overflow-hidden',
+                                            'h-9 w-10 rounded-xl transition',
+                                            isGridView ? 'bg-orange-50 text-orange-600' : 'text-slate-400',
                                         ]"
                                     >
-                                        <img
-                                            :src="post.image"
-                                            class="h-full w-full object-cover transition duration-700 group-hover:scale-110"
-                                        />
-                                    </div>
-                                    <div
-                                        class="flex flex-col justify-center p-6"
+                                        <i class="fa-solid fa-table-cells-large"></i>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="isGridView = false"
+                                        :class="[
+                                            'h-9 w-10 rounded-xl transition',
+                                            !isGridView ? 'bg-orange-50 text-orange-600' : 'text-slate-400',
+                                        ]"
                                     >
-                                        <span
-                                            class="text-lg font-black text-orange-600"
-                                            >{{ post.price }}</span
-                                        >
-                                        <h4
-                                            class="mt-2 line-clamp-2 text-[13px] font-bold text-slate-800 uppercase transition group-hover:text-orange-600"
-                                        >
-                                            {{ post.title }}
-                                        </h4>
-                                    </div>
+                                        <i class="fa-solid fa-list"></i>
+                                    </button>
                                 </div>
                             </div>
-                        </div>
+
+                            <div v-if="!props.hasActivePackage" class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
+                                    <i class="fa-solid fa-lock text-xl"></i>
+                                </div>
+                                <h4 class="mt-4 text-lg font-bold text-slate-900">Danh sách bài viết đang bị ẩn</h4>
+                                <p class="mx-auto mt-2 max-w-xl text-sm text-slate-600">
+                                    Hệ thống chỉ hiển thị bài đăng khi tài khoản có gói đăng tin còn hiệu lực. Vui lòng mua hoặc gia hạn gói để mở lại khu vực quản lý bài viết.
+                                </p>
+                            </div>
+
+                            <div
+                                v-else-if="props.posts.data.length"
+                                class="mt-6 grid gap-4"
+                                :class="isGridView ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'"
+                            >
+                                <article
+                                    v-for="post in props.posts.data"
+                                    :key="post.id"
+                                    class="overflow-hidden rounded-2xl border border-slate-200 transition hover:border-orange-200 hover:shadow-lg"
+                                >
+                                    <div :class="isGridView ? '' : 'flex flex-col sm:flex-row'">
+                                        <div :class="isGridView ? 'h-44 w-full' : 'h-44 w-full sm:w-64'" class="overflow-hidden bg-slate-100">
+                                            <img
+                                                :src="post.thumbnail || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'"
+                                                alt="thumbnail"
+                                                class="h-full w-full object-cover"
+                                            />
+                                        </div>
+                                        <div class="flex flex-1 flex-col justify-between p-4">
+                                            <div>
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <p class="text-lg font-black text-orange-600">{{ formatPrice(post.price) }}</p>
+                                                    <span
+                                                        class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                                                        :class="post.status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'"
+                                                    >
+                                                        {{ post.status ? 'Đang hiển thị' : 'Đang ẩn' }}
+                                                    </span>
+                                                </div>
+                                                <h4 class="mt-2 line-clamp-2 text-sm font-bold text-slate-900">{{ post.title }}</h4>
+                                            </div>
+                                            <div class="mt-3 space-y-1.5 text-sm text-slate-600">
+                                                <p><i class="fa-solid fa-ruler-combined mr-2 text-slate-400"></i>{{ post.area }} m2</p>
+                                                <p><i class="fa-solid fa-location-dot mr-2 text-slate-400"></i>{{ post.address }}</p>
+                                                <p><i class="fa-regular fa-calendar mr-2 text-slate-400"></i>{{ post.created_at }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+
+                            <div v-if="props.posts.data.length && props.posts.last_page > 1" class="mt-8 flex items-center justify-center gap-2">
+                                <button
+                                    type="button"
+                                    @click="goToPage(props.posts.current_page - 1)"
+                                    :disabled="props.posts.current_page === 1"
+                                    class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+
+                                <div class="flex gap-1">
+                                    <button
+                                        v-for="page in Math.min(5, props.posts.last_page)"
+                                        :key="page"
+                                        type="button"
+                                        @click="goToPage(page)"
+                                        :class="[
+                                            'h-9 min-w-9 rounded-lg text-sm font-semibold transition',
+                                            page === props.posts.current_page
+                                                ? 'bg-orange-600 text-white'
+                                                : 'border border-slate-200 text-slate-700 hover:bg-slate-50',
+                                        ]"
+                                    >
+                                        {{ page }}
+                                    </button>
+                                    <span v-if="props.posts.last_page > 5" class="flex items-center px-2 text-slate-500">...</span>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    @click="goToPage(props.posts.current_page + 1)"
+                                    :disabled="props.posts.current_page === props.posts.last_page"
+                                    class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <div v-else class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                                <h4 class="text-lg font-bold text-slate-900">Bạn chưa có bài đăng nào</h4>
+                                <p class="mt-2 text-sm text-slate-600">Hãy tạo bài đăng đầu tiên để tiếp cận khách hàng tiềm năng.</p>
+                                <a
+                                    href="/dang-tin"
+                                    class="mt-5 inline-flex rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700"
+                                >
+                                    Tạo bài đăng
+                                </a>
+                            </div>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -279,117 +366,70 @@ const deletePost = (id) => {
             <Transition name="fade">
                 <div
                     v-if="isEditModalOpen"
-                    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+                    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4 py-8 backdrop-blur-sm"
                 >
-                    <div
-                        class="w-full max-w-xl rounded-[3rem] bg-white p-8 shadow-2xl"
-                    >
-                        <div class="mb-6 flex items-center justify-between">
-                            <h3
-                                class="text-lg font-black tracking-tight text-slate-900 uppercase italic"
-                            >
-                                Cập nhật hồ sơ sếp
-                            </h3>
+                    <div class="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl sm:p-8">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="text-xl font-black text-slate-900">Cập nhật thông tin cá nhân</h3>
+                                <p class="mt-1 text-sm text-slate-500">Chỉ giữ các trường thông tin đang được lưu trong hệ thống.</p>
+                            </div>
                             <button
+                                type="button"
                                 @click="isEditModalOpen = false"
-                                class="text-slate-400 transition hover:text-slate-600"
+                                class="text-slate-400 transition hover:text-slate-700"
                             >
                                 <i class="fa-solid fa-xmark text-xl"></i>
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
-                                <label
-                                    class="ml-1 text-[10px] font-black text-slate-400 uppercase"
-                                    >Tên hiển thị</label
-                                >
+                                <label class="text-xs font-bold tracking-wider text-slate-500 uppercase">Tên hiển thị</label>
                                 <input
-                                    v-model="editForm.name"
+                                    v-model="form.name"
                                     type="text"
-                                    class="mt-1 w-full rounded-2xl border-none bg-slate-50 px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500"
+                                    class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-orange-400 focus:ring-orange-400"
                                 />
+                                <InputError class="mt-1" :message="form.errors.name" />
                             </div>
+
                             <div>
-                                <label
-                                    class="ml-1 text-[10px] font-black text-slate-400 uppercase"
-                                    >Số điện thoại</label
-                                >
+                                <label class="text-xs font-bold tracking-wider text-slate-500 uppercase">Số điện thoại</label>
                                 <input
-                                    v-model="editForm.phone"
+                                    v-model="form.phone_number"
                                     type="text"
-                                    class="mt-1 w-full rounded-2xl border-none bg-slate-50 px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500"
+                                    class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-orange-400 focus:ring-orange-400"
                                 />
+                                <InputError class="mt-1" :message="form.errors.phone_number" />
                             </div>
-                            <div>
-                                <label
-                                    class="ml-1 text-[10px] font-black text-slate-400 uppercase"
-                                    >Email liên hệ</label
-                                >
+
+                            <div class="sm:col-span-2">
+                                <label class="text-xs font-bold tracking-wider text-slate-500 uppercase">Email</label>
                                 <input
-                                    v-model="editForm.email"
+                                    v-model="form.email"
                                     type="email"
-                                    class="mt-1 w-full rounded-2xl border-none bg-slate-50 px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500"
+                                    class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-orange-400 focus:ring-orange-400"
                                 />
-                            </div>
-                            <div>
-                                <label
-                                    class="ml-1 text-[10px] font-black text-slate-400 uppercase"
-                                    >Địa điểm</label
-                                >
-                                <input
-                                    v-model="editForm.location"
-                                    type="text"
-                                    class="mt-1 w-full rounded-2xl border-none bg-slate-50 px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500"
-                                />
-                            </div>
-                            <div>
-                                <label
-                                    class="ml-1 text-[10px] font-black text-slate-400 uppercase"
-                                    >Kinh nghiệm</label
-                                >
-                                <input
-                                    v-model="editForm.experience"
-                                    type="text"
-                                    class="mt-1 w-full rounded-2xl border-none bg-slate-50 px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500"
-                                />
-                            </div>
-                            <div>
-                                <label
-                                    class="ml-1 text-[10px] font-black text-slate-400 uppercase"
-                                    >Chức danh</label
-                                >
-                                <input
-                                    v-model="editForm.title"
-                                    type="text"
-                                    class="mt-1 w-full rounded-2xl border-none bg-slate-50 px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500"
-                                />
-                            </div>
-                            <div class="md:col-span-2">
-                                <label
-                                    class="ml-1 text-[10px] font-black text-slate-400 uppercase"
-                                    >Tiểu sử cá nhân</label
-                                >
-                                <textarea
-                                    v-model="editForm.bio"
-                                    rows="3"
-                                    class="mt-1 w-full rounded-2xl border-none bg-slate-50 px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500"
-                                ></textarea>
+                                <InputError class="mt-1" :message="form.errors.email" />
                             </div>
                         </div>
 
-                        <div class="mt-8 flex gap-3">
+                        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                             <button
+                                type="button"
                                 @click="isEditModalOpen = false"
-                                class="flex-1 rounded-2xl bg-slate-100 py-3 text-[10px] font-black tracking-widest text-slate-500 uppercase transition hover:bg-slate-200"
+                                class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                             >
-                                Hủy bỏ
+                                Hủy
                             </button>
                             <button
+                                type="button"
                                 @click="saveProfile"
-                                class="flex-1 rounded-2xl bg-orange-600 py-3 text-[10px] font-black tracking-widest text-white uppercase shadow-lg shadow-orange-200 transition hover:scale-[1.02]"
+                                :disabled="form.processing"
+                                class="rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-orange-300"
                             >
-                                Lưu thông tin
+                                {{ form.processing ? 'Đang lưu...' : 'Lưu thay đổi' }}
                             </button>
                         </div>
                     </div>

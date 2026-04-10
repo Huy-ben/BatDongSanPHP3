@@ -1,9 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Auth\GoogleLoginController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
+use Laravel\Fortify\Features;
 
 // Route::inertia('/', 'Welcome', [
 //     'canRegister' => Features::enabled(Features::registration()),
@@ -22,14 +24,21 @@ Route::inertia('/', 'Client/Home')->name('home');
 Route::inertia('post-sell', 'Client/PostSell')->name('post-sell');
 Route::inertia('post-rent', 'Client/PostRent')->name('post-rent');
 Route::inertia('post-detail', 'Client/PostDetail')->name('post-detail');
-Route::inertia('dang-tin', 'Client/PostCreate')->name('post-create');
+Route::middleware(['auth'])->group(function () {
+    Route::get('dang-tin', [PostController::class, 'create'])->name('post-create');
+    Route::post('dang-tin', [PostController::class, 'store'])->name('post-store');
+});
 Route::inertia('package', 'Client/Package')->name('package');
 Route::inertia('blog', 'Client/Blog')->name('blog');
 Route::inertia('blog-detail', 'Client/BlogDetail')->name('blog-detail');
 Route::inertia('about-us', 'Client/AboutUs')->name('about-us');
 Route::get('contact', [ContactController::class, 'index'])->name('contact');
 Route::post('api/contact', [ContactController::class, 'send'])->name('contact.send');
-Route::inertia('profile', 'Client/Profile')->name('profile');
+Route::middleware(['auth'])->group(function () {
+    Route::get('profile', [ProfileController::class, 'show'])->name('profile');
+    Route::patch('profile', [ProfileController::class, 'update'])->name('client.profile.update');
+    Route::post('profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
+});
 Route::get('api/category', [App\Http\Controllers\Api\CategoryController::class, 'index'])->name('categoryApi');
 Route::get('api/blog', [App\Http\Controllers\Api\BlogController::class, 'index'])->name('blogApi');
 Route::get('api/blog/{blog}', [App\Http\Controllers\Api\BlogController::class, 'show'])->name('blogDetailApi');

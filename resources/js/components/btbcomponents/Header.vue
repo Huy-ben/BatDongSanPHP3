@@ -107,7 +107,8 @@ const handleLogout = () => {
                         aria-label="Tài khoản"
                         href="/profile"
                     >
-                        {{ userInitial }}
+                    <p v-if="!authUser.avatar">{{ userInitial }}</p>
+                    <img v-else :src="authUser.avatar" alt="Avatar" class="h-full w-full rounded-full object-cover" />
                     </a>
 
                     <div
