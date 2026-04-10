@@ -3,116 +3,25 @@ import { computed, ref } from 'vue';
 import axios from 'axios';
 import { Link } from '@inertiajs/vue3';
 import ClientLayout from '@/layouts/ClientLayout.vue';
-import Footer from '@/components/btbcomponents/Footer.vue';
 import { onMounted } from 'vue';
 const posts = ref([]);
+const categories = ref([]);
+const blogs = ref([]);
 onMounted(() => {
-    fetchPosts();
+    fetchHomeData();
 });
-const fetchPosts = () => {
+const fetchHomeData = () => {
     axios.get('/api/home')
         .then(response => {
-            posts.value = response.data;
-            console.log('Fetched posts:', posts.value);
+            posts.value = response.data.posts ?? [];
+            categories.value = response.data.categories ?? [];
+            blogs.value = response.data.blogs ?? [];
+            console.log('Fetched home data:', response.data);
         })
         .catch(error => {
-            console.error('Error fetching posts:', error);
+            console.error('Error fetching home data:', error);
         });
 };
-
-const categories = [
-    { label: 'Căn hộ', icon: 'fa-building' },
-    { label: 'Nhà riêng', icon: 'fa-house' },
-    { label: 'Nhà phố', icon: 'fa-shop' },
-    { label: 'Đất nền', icon: 'fa-map' },
-    { label: 'Kho xưởng', icon: 'fa-warehouse' },
-    { label: 'Biệt thự', icon: 'fa-gem' },
-];
-
-const projects = Array.from({ length: 6 }, (_, index) => ({
-    id: index + 1,
-    name: `Diamond Riverside ${index + 1}`,
-    badge: `Dự án cao cấp #0${index + 1}`,
-    location: 'Thủ Thiêm, TP. Hồ Chí Minh',
-    image: `https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&sig=${index + 1}`,
-}));
-
-const houses = [
-    {
-        id: 1,
-        title: 'Penthouse Riverview',
-        price: '45 Tỷ',
-        area: '250m²',
-        img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=500',
-        location: 'TP. Hồ Chí Minh',
-    },
-    {
-        id: 2,
-        title: 'Villa Gardenia',
-        price: '12 Tỷ',
-        area: '180m²',
-        img: 'https://images.unsplash.com/photo-1600585154340-be6199f7d009?w=500',
-        location: 'TP. Hồ Chí Minh',
-    },
-    {
-        id: 3,
-        title: 'Căn hộ Fiato Uptown',
-        price: '3.8 Tỷ',
-        area: '85m²',
-        img: 'https://images.unsplash.com/photo-1567496898905-af404c45a95a?w=500',
-        location: 'TP. Hồ Chí Minh',
-    },
-    {
-        id: 4,
-        title: 'Shophouse Center',
-        price: '15 Tỷ',
-        area: '120m²',
-        img: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=500',
-        location: 'TP. Hồ Chí Minh',
-    },
-    {
-        id: 5,
-        title: 'Studio Landmark 81',
-        price: '5.5 Tỷ',
-        area: '55m²',
-        img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500',
-        location: 'TP. Hồ Chí Minh',
-    },
-    {
-        id: 6,
-        title: 'Nhà phố Lakeview',
-        price: '9.2 Tỷ',
-        area: '105m²',
-        img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=500',
-        location: 'TP. Hồ Chí Minh',
-    },
-    {
-        id: 7,
-        title: 'Duplex Cao Cấp',
-        price: '18 Tỷ',
-        area: '140m²',
-        img: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=500',
-        location: 'TP. Hồ Chí Minh',
-    },
-    {
-        id: 8,
-        title: 'Đất nền Biệt thự',
-        price: '7.5 Tỷ',
-        area: '200m²',
-        img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=500',
-        location: 'TP. Hồ Chí Minh',
-    },
-];
-
-const newsList = Array.from({ length: 6 }, (_, index) => ({
-    id: index + 1,
-    title: `Cơn sốt bất động sản phía Đông và những điều cần biết khi đầu tư #${index + 1}`,
-    summary:
-        'Phân tích chi tiết dòng tiền và xu hướng dịch chuyển của các nhà đầu tư lớn trong năm 2026...',
-    date: '30 Tháng 3, 2026',
-    readTime: '4 phút đọc',
-    image: `https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&sig=${index + 11}`,
-}));
 
 const propertyTypes = [
     'Tất cả loại',
@@ -123,30 +32,42 @@ const propertyTypes = [
     'Kho xưởng',
 ];
 
-const priceRanges = [
-    'Mức giá',
-    'Dưới 2 tỷ',
-    '2 - 5 tỷ',
-    '5 - 10 tỷ',
-    '10 - 20 tỷ',
-    'Trên 20 tỷ',
-];
-
 const selectedPropertyType = ref(propertyTypes[0]);
-const selectedPriceRange = ref(priceRanges[0]);
+const minPrice = ref('');
+const maxPrice = ref('');
 
 const projectFavorites = ref(new Set());
 const hotFavorites = ref(new Set());
 const sliderRef = ref(null);
-const loadClicks = ref(0);
+const visiblePostsCount = ref(4);
+const loadMoreClicks = ref(0);
 
-const showAllHouses = computed(() => loadClicks.value > 0);
-const visibleHouses = computed(() =>
-    showAllHouses.value ? houses : houses.slice(0, 4),
-);
+const projectPosts = computed(() => posts.value.slice(0, 6));
+const visibleHotPosts = computed(() => posts.value.slice(0, visiblePostsCount.value));
+const canShowLoadMoreButton = computed(() => posts.value.length > 0);
 const loadMoreLabel = computed(() =>
-    loadClicks.value === 0 ? 'XEM THÊM SẢN PHẨM' : 'XEM TẤT CẢ SẢN PHẨM',
+    loadMoreClicks.value === 0
+        ? 'XEM THÊM SẢN PHẨM (+4)'
+        : 'XEM TẤT CẢ SẢN PHẨM',
 );
+
+function formatCurrency(value) {
+    const amount = Number(value || 0);
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
+}
+
+function formatArea(value) {
+    return `${Number(value || 0)}m²`;
+}
+
+function formatDate(value) {
+    if (!value) return '';
+    return new Intl.DateTimeFormat('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    }).format(new Date(value));
+}
 
 function slide(direction) {
     const slider = sliderRef.value;
@@ -173,10 +94,13 @@ function toggleHotFavorite(id) {
 }
 
 function handleLoadMore() {
-    loadClicks.value += 1;
-    if (loadClicks.value > 1) {
-        window.location.href = '/post-sell';
+    if (loadMoreClicks.value === 0) {
+        visiblePostsCount.value = Math.min(visiblePostsCount.value + 4, posts.value.length);
+        loadMoreClicks.value += 1;
+        return;
     }
+
+    window.location.href = '/post-sell';
 }
 </script>
 
@@ -193,7 +117,7 @@ function handleLoadMore() {
                 />
                 <div class="absolute inset-0 bg-black/40"></div>
 
-                <div class="relative z-10 w-full max-w-4xl px-4 text-center sm:px-6">
+                <div class="relative z-10 w-full max-w-6xl px-4 text-center sm:px-6">
                     <h1
                         class="mb-5 text-2xl font-extrabold text-white drop-shadow-2xl sm:mb-6 sm:text-3xl md:mb-8 md:text-4xl"
                     >
@@ -268,18 +192,28 @@ function handleLoadMore() {
                                 </span>
                             </div>
 
-                            <div class="relative md:col-span-2">
-                                <select
-                                    v-model="selectedPriceRange"
-                                    class="w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 py-3 pr-10 text-sm leading-tight shadow-sm transition focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
-                                >
-                                    <option v-for="range in priceRanges" :key="range">
-                                        {{ range }}
-                                    </option>
-                                </select>
-                                <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                    <i class="fa-solid fa-chevron-down"></i>
-                                </span>
+                            <div class="md:col-span-2">
+                                <div class="flex items-center gap-2">
+                                    <input
+                                        v-model="minPrice"
+                                        type="number"
+                                        min="0"
+                                        step="1000000"
+                                        inputmode="numeric"
+                                        placeholder="Giá từ"
+                                        class="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm shadow-sm transition focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                                    />
+                                    <span class="text-gray-300">-</span>
+                                    <input
+                                        v-model="maxPrice"
+                                        type="number"
+                                        min="0"
+                                        step="1000000"
+                                        inputmode="numeric"
+                                        placeholder="Giá đến"
+                                        class="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm shadow-sm transition focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                                    />
+                                </div>
                             </div>
 
                             <div class="md:col-span-3">
@@ -318,26 +252,26 @@ function handleLoadMore() {
 
             <section class="border-b border-gray-100 bg-white py-8">
                 <div class="container mx-auto px-4">
-                    <div class="grid grid-cols-3 gap-3 sm:flex sm:flex-wrap sm:justify-center sm:gap-4 md:gap-8">
+                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                         <a
                             v-for="category in categories"
-                            :key="category.label"
+                            :key="category.id"
                             href="#"
-                            class="group flex flex-col items-center rounded-xl border border-transparent py-2 transition hover:border-orange-100 hover:bg-orange-50 sm:py-0"
+                            class="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                         >
-                            <div
-                                class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 transition-colors group-hover:bg-orange-50"
-                            >
-                                <i
-                                    :class="[
-                                        'fa-solid',
-                                        category.icon,
-                                        'text-gray-500',
-                                        'group-hover:text-orange-600',
-                                    ]"
-                                ></i>
+                            <div class="relative h-28 overflow-hidden">
+                                <img
+                                    :src="category.image"
+                                    :alt="category.category_name"
+                                    class="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                                />
+                                <div class="absolute inset-0 bg-linear-to-t from-black/45 to-transparent"></div>
                             </div>
-                            <span class="mt-2 text-center text-xs font-medium text-gray-600 group-hover:text-orange-600">{{ category.label }}</span>
+                            <div class="p-3">
+                                <span class="line-clamp-1 text-center text-sm font-semibold text-gray-700 transition group-hover:text-orange-600">
+                                    {{ category.category_name }}
+                                </span>
+                            </div>
                         </a>
                     </div>
                 </div>
@@ -372,7 +306,7 @@ function handleLoadMore() {
                         class="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth md:gap-6"
                     >
                         <div
-                            v-for="project in projects"
+                            v-for="project in projectPosts"
                             :key="project.id"
                             data-card
                             class="group relative w-60 shrink-0 cursor-pointer snap-start sm:w-65 md:w-80"
@@ -381,9 +315,9 @@ function handleLoadMore() {
                                 class="h-85 overflow-hidden rounded-3xl shadow-lg sm:h-90 md:h-105"
                             >
                                 <img
-                                    :src="project.image"
+                                    :src="project.img"
                                     class="h-full w-full object-cover transition duration-700 group-hover:scale-110"
-                                    :alt="project.name"
+                                    :alt="project.title"
                                 />
                                 <div class="absolute top-5 right-5 z-20">
                                     <button
@@ -405,18 +339,18 @@ function handleLoadMore() {
                                 <div class="absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black/90 via-transparent to-transparent p-6">
                                     <span
                                         class="text-xs font-bold text-orange-400 uppercase"
-                                        >{{ project.badge }}</span
+                                        >{{ project.listing_type || 'Bất động sản' }}</span
                                     >
                                     <h4
                                         class="mt-1 text-xl font-black text-white uppercase"
                                     >
-                                        {{ project.name }}
+                                        {{ project.title }}
                                     </h4>
                                     <p
                                         class="mt-2 line-clamp-1 text-sm text-gray-300"
                                     >
                                         <i class="fa-solid fa-location-dot"></i>
-                                        {{ project.location }}
+                                        {{ project.address }}
                                     </p>
                                 </div>
                             </div>
@@ -435,10 +369,9 @@ function handleLoadMore() {
                         class="grid grid-cols-1 gap-5 sm:grid-cols-2 md:gap-6 lg:grid-cols-4"
                     >
                         <div
-                            v-for="post in posts"
+                            v-for="post in visibleHotPosts"
                             :key="post.id"
                             class="product-item group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-xl"
-                            :class="{ 'animate-fadeIn': showAllHouses }"
                         >
                         <a href="/post-detail">
                             <div class="relative h-48 overflow-hidden md:h-52">
@@ -463,11 +396,9 @@ function handleLoadMore() {
                                 <div class="flex items-center justify-between">
                                     <span
                                         class="text-lg font-bold text-red-600"
-                                        >{{ post.price }}</span
+                                        >{{ formatCurrency(post.price) }}</span
                                     >
-                                    <span class="text-sm text-gray-400">{{
-                                        post.area
-                                    }}</span>
+                                    <span class="text-sm text-gray-400">{{ formatArea(post.area) }}</span>
                                 </div>
                                 <div
                                     class="mt-4 flex items-center justify-between border-t pt-4"
@@ -494,6 +425,7 @@ function handleLoadMore() {
                     </div>
                     <div class="mt-10 text-center md:mt-12">
                         <button
+                            v-if="canShowLoadMoreButton"
                             id="btn-load-more"
                             @click="handleLoadMore"
                             class="w-full rounded-full border-2 border-orange-600 px-6 py-3 font-bold text-orange-600 shadow-lg transition-all hover:bg-orange-600 hover:text-white sm:w-auto sm:px-10"
@@ -501,11 +433,7 @@ function handleLoadMore() {
                             {{ loadMoreLabel }}
                             <i
                                 class="fa-solid"
-                                :class="
-                                    loadClicks === 0
-                                        ? 'fa-chevron-down ml-2'
-                                        : 'fa-arrow-right ml-2'
-                                "
+                                :class="'fa-chevron-down ml-2'"
                             ></i>
                         </button>
                     </div>
@@ -519,17 +447,17 @@ function handleLoadMore() {
                     </h2>
                     <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
                         <div
-                            v-for="news in newsList"
-                            :key="news.id"
+                            v-for="blog in blogs"
+                            :key="blog.id"
                             class="group flex cursor-pointer flex-col gap-6 border-b border-gray-100 pb-8 md:flex-row"
                         >
                             <div
                                 class="h-40 w-full overflow-hidden rounded-2xl md:w-56"
                             >
                                 <img
-                                    :src="news.image"
+                                    :src="blog.image"
                                     class="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                                    :alt="news.title"
+                                    :alt="blog.title"
                                 />
                             </div>
                             <div class="flex-1">
@@ -540,17 +468,17 @@ function handleLoadMore() {
                                 <h4
                                     class="mt-2 line-clamp-2 text-lg font-bold transition group-hover:text-orange-600"
                                 >
-                                    {{ news.title }}
+                                    {{ blog.title }}
                                 </h4>
                                 <p
                                     class="mt-3 line-clamp-2 text-sm text-gray-500"
                                 >
-                                    {{ news.summary }}
+                                    {{ blog.excerpt }}
                                 </p>
                                 <div
                                     class="mt-4 text-[10px] font-bold text-gray-400 uppercase"
                                 >
-                                    {{ news.date }} • {{ news.readTime }}
+                                    {{ formatDate(blog.created_at) }}
                                 </div>
                             </div>
                         </div>
@@ -582,7 +510,7 @@ function handleLoadMore() {
                                 Đăng tin ngay
                             </Link>
                             <a
-                                href="/lien-he"
+                                href="/contact"
                                 class="rounded-full border border-orange-200 px-6 py-3 text-center text-sm font-bold text-orange-600 transition hover:bg-orange-50"
                             >
                                 Tư vấn miễn phí

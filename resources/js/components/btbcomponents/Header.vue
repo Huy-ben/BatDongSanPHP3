@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3'
+import axios from 'axios'
 import { computed, ref } from 'vue'
+import { clearAuthToken } from '@/lib/authToken'
 import Label from '../ui/label/Label.vue'
 
 const navItems = [
@@ -48,7 +50,14 @@ const userInitial = computed(() => {
     return name?.charAt(0).toUpperCase() ?? 'B'
 })
 
-const handleLogout = () => {
+const handleLogout = async () => {
+    try {
+        await axios.post('/api/logout')
+    } catch {
+        // Continue with web logout even if API token already invalid.
+    }
+
+    clearAuthToken()
     router.post('/logout')
 }
 </script>

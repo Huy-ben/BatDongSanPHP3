@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form, Head, router } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
+import axios from 'axios';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -10,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthBase from '@/layouts/AuthLayout.vue';
+import { setAuthToken } from '@/lib/authToken';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -57,6 +59,8 @@ declare global {
 
 const googleButtonRef = ref<HTMLElement | null>(null);
 const googleError = ref('');
+const loginEmail = ref('');
+const loginPassword = ref('');
 
 const handleGoogleCredentialResponse = (response: GoogleCredentialResponse): void => {
     const credential = response.credential;
@@ -135,6 +139,24 @@ onMounted(() => {
     document.head.appendChild(script);
 });
 
+const issueApiToken = async (): Promise<void> => {
+    if (!loginEmail.value || !loginPassword.value) return;
+
+    try {
+        const response = await axios.post('/api/login', {
+            email: loginEmail.value,
+            password: loginPassword.value,
+            device_name: navigator.userAgent || 'web-browser',
+        });
+
+        if (response.data?.token) {
+            setAuthToken(response.data.token);
+        }
+    } catch {
+        // Keep web login success even if API token cannot be issued.
+    }
+};
+
 </script>
 
 <template>
@@ -155,6 +177,7 @@ onMounted(() => {
         <Form
             v-bind="store.form()"
             :reset-on-success="['password']"
+            @success="issueApiToken"
             v-slot="{ errors, processing }"
             class="flex flex-col gap-6"
         >
@@ -163,6 +186,7 @@ onMounted(() => {
                     <Label for="email" class="text-zinc-800">Email</Label>
                     <Input
                         id="email"
+                        v-model="loginEmail"
                         type="email"
                         name="email"
                         required
@@ -189,6 +213,7 @@ onMounted(() => {
                     </div>
                     <PasswordInput
                         id="password"
+                        v-model="loginPassword"
                         name="password"
                         required
                         :tabindex="2"

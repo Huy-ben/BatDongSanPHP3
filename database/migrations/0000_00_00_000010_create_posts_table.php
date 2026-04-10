@@ -18,7 +18,9 @@ return new class extends Migration {
             $table->string('slug', 255)->unique()->comment('Đường dẫn thân thiện với SEO');
             $table->decimal('price', 20, 0)->comment('Giá sản phẩm');
             $table->float('area')->comment('Diện tích');
+            $table->text('location')->nullable()->comment('Vị trí cụ thể');
             $table->string('address', 255)->comment('Địa chỉ');
+            $table->text('description')->nullable()->comment('Mô tả chi tiết sản phẩm');
             $table->enum('status', ['0', '1'])->default('1')->comment('0: Ẩn, 1: Hiện');
             $table->timestamps();
             $table->foreign('seller_id')->references('id')->on('users');

@@ -1,11 +1,66 @@
 <script setup>
 import ClientLayout from '@/layouts/ClientLayout.vue';
+import axios from 'axios';
+import { onMounted, ref } from 'vue';
+
+const posts = ref([]);
+const blogs = ref([]);
+
+onMounted(() => {
+    fetchPosts();
+    fetchBlogs();
+});
+
+function fetchPosts() {
+    axios.get('/api/posts/rent')
+        .then((response) => {
+            posts.value = response.data.data ?? [];
+        })
+        .catch((error) => {
+            console.error('Error fetching rent posts:', error);
+        });
+}
+
+function fetchBlogs() {
+    axios.get('/api/blog')
+        .then((response) => {
+            blogs.value = response.data ?? [];
+        })
+        .catch((error) => {
+            console.error('Error fetching blogs:', error);
+        });
+}
+
+function formatPrice(value) {
+    const amount = Number(value || 0);
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ/tháng';
+}
+
+function formatArea(value) {
+    return `${Number(value || 0)} m2`;
+}
+
+function maskPhone(phone) {
+    if (!phone) return 'Gọi ngay';
+    const raw = String(phone);
+    if (raw.length <= 3) return '***';
+    return `${raw.slice(0, -3)}***`;
+}
+
+function formatDate(value) {
+    if (!value) return '';
+    return new Intl.DateTimeFormat('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    }).format(new Date(value));
+}
 </script>
 
 <template>
     <ClientLayout>
         <div class="min-h-screen bg-gray-50 text-gray-900 antialiased">
-            <header class="sticky top-24 z-40 border-b border-gray-200/60 bg-white/80 py-4 backdrop-blur-md shadow-sm">
+            <header class="sticky top-24 z-40 border-b border-gray-200 bg-white py-4 shadow-sm">
                 <div class="container mx-auto max-w-6xl px-4 md:px-5">
                     <div class="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-4">
                         
@@ -62,7 +117,7 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
                         </div>
 
                         <button
-                            class="flex items-center justify-center gap-2 rounded-lg bg-[#ff9c22] py-2.5 text-xs font-bold tracking-wide text-white uppercase shadow-lg shadow-orange-200 transition duration-300 hover:bg-orange-600 active:scale-95"
+                            class="flex items-center justify-center gap-2 rounded-lg bg-[#ff9c22] py-2.5 text-xs font-bold tracking-wide text-white uppercase transition duration-300 hover:bg-orange-600 active:scale-95"
                         >
                             <i class="fa-solid fa-filter"></i> Áp dụng lọc
                         </button>
@@ -88,22 +143,24 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
                                 </h2>
                                 <span
                                     class="text-[11px] font-bold tracking-widest text-gray-500 uppercase"
-                                    >850 Kết quả</span
+                                    >{{ posts.length }} Kết quả</span
                                 >
                             </div>
 
                             <div
+                                v-for="post in posts"
+                                :key="post.id"
                                 class="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-300 hover:border-[#ff9c22]/50 hover:shadow-xl md:flex-row"
                             >
                                 <div
                                     class="relative h-52 shrink-0 overflow-hidden md:w-80"
                                 >
                                     <img
-                                        src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"
+                                        :src="post.img"
                                         class="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                                     />
                                     <span
-                                        class="absolute top-3 left-3 rounded bg-[#ff9c22] px-2 py-1 text-[10px] font-bold text-white uppercase shadow-md"
+                                        class="absolute top-3 left-3 rounded bg-gray-800 px-2 py-1 text-[10px] font-bold text-white uppercase shadow-md"
                                     >
                                         Cho thuê nhanh
                                     </span>
@@ -116,19 +173,18 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
                                         <h3
                                             class="line-clamp-1 text-base font-bold text-gray-800 uppercase transition duration-300 group-hover:text-[#ff9c22]"
                                         >
-                                            Căn hộ dịch vụ Landmark 81 - Tầng
-                                            cao view thành phố
+                                            {{ post.title }}
                                         </h3>
                                         <div
                                             class="mt-2.5 flex items-center gap-4"
                                         >
                                             <span
                                                 class="text-xl font-black text-[#ff9c22] italic"
-                                                >25 Triệu/tháng</span
+                                                >{{ formatPrice(post.price) }}</span
                                             >
                                             <span
                                                 class="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-900"
-                                                >55 m2</span
+                                                >{{ formatArea(post.area) }}</span
                                             >
                                             <span
                                                 class="text-[10px] font-bold tracking-tight text-gray-500 uppercase"
@@ -136,17 +192,13 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
                                                 <i
                                                     class="fa-solid fa-location-dot mr-1"
                                                 />
-                                                Bình Thạnh
+                                                {{ post.address }}
                                             </span>
                                         </div>
                                         <p
                                             class="mt-3 line-clamp-2 text-xs leading-relaxed text-gray-500"
                                         >
-                                            Căn hộ studio đầy đủ tiện nghi,
-                                            thiết kế hiện đại, chỉ việc xách
-                                            vali vào ở. Miễn phí phí quản lý,
-                                            thẻ cư dân sử dụng hồ bơi và gym cao
-                                            cấp...
+                                            {{ post.description }}
                                         </p>
                                     </div>
                                     <div
@@ -154,7 +206,7 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
                                     >
                                         <div class="flex items-center gap-3">
                                             <div
-                                                class="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-[#ff9c22] shadow-sm"
+                                                class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-700 shadow-sm"
                                             >
                                                 QT
                                             </div>
@@ -162,23 +214,23 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
                                                 <p
                                                     class="text-[11px] leading-none font-bold text-gray-800 uppercase"
                                                 >
-                                                    Quốc Toàn
+                                                    {{ post.seller_name || 'Chủ tin' }}
                                                 </p>
                                                 <p
                                                     class="mt-1 text-[10px] text-gray-400"
                                                 >
-                                                    Đăng hôm nay
+                                                    {{ post.category_name }}
                                                 </p>
                                             </div>
                                         </div>
                                         <a
-                                            href="tel:0909999888"
+                                            :href="`https://zalo.me/${post.seller_phone || ''}`"
                                             class="z-10 flex items-center gap-2 rounded-lg border border-[#ff9c22] px-4 py-2 text-xs font-bold text-[#ff9c22] uppercase transition duration-300 hover:bg-[#ff9c22] hover:text-white"
                                         >
                                             <i
                                                 class="fa-solid fa-phone-volume"
                                             />
-                                            Gọi ngay
+                                            {{ maskPhone(post.seller_phone) }}
                                         </a>
                                     </div>
                                 </div>
@@ -193,7 +245,7 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
                                     <i class="fa-solid fa-chevron-left" />
                                 </button>
                                 <button
-                                    class="h-9 w-9 rounded-lg bg-[#ff9c22] text-sm font-bold text-white shadow-md shadow-orange-200"
+                                    class="h-9 w-9 rounded-lg bg-[#ff9c22] text-sm font-bold text-white"
                                 >
                                     1
                                 </button>
@@ -224,11 +276,13 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
                             </div>
 
                             <article
+                                v-for="blog in blogs.slice(0, 3)"
+                                :key="blog.id"
                                 class="group mb-4 cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-white transition duration-300 hover:shadow-lg"
                             >
                                 <div class="h-28 overflow-hidden bg-gray-200">
                                     <img
-                                        src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400"
+                                        :src="blog.image"
                                         class="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                                     />
                                 </div>
@@ -241,62 +295,10 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
                                     <h4
                                         class="mb-2 line-clamp-2 text-sm font-bold text-gray-800 transition group-hover:text-[#ff9c22]"
                                     >
-                                        Giá thuê căn hộ tăng 20% năm 2026
+                                        {{ blog.title }}
                                     </h4>
                                     <p class="text-[11px] text-gray-500">
-                                        2 ngày trước
-                                    </p>
-                                </div>
-                            </article>
-
-                            <article
-                                class="group mb-4 cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-white transition duration-300 hover:shadow-lg"
-                            >
-                                <div class="h-28 overflow-hidden bg-gray-200">
-                                    <img
-                                        src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400"
-                                        class="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                                    />
-                                </div>
-                                <div class="p-3">
-                                    <p
-                                        class="mb-2 text-[10px] font-bold tracking-wider text-[#ff9c22] uppercase"
-                                    >
-                                        Kinh Doanh
-                                    </p>
-                                    <h4
-                                        class="mb-2 line-clamp-2 text-sm font-bold text-gray-800 transition group-hover:text-[#ff9c22]"
-                                    >
-                                        Cơ hội cho thuê dự án hạng A
-                                    </h4>
-                                    <p class="text-[11px] text-gray-500">
-                                        4 ngày trước
-                                    </p>
-                                </div>
-                            </article>
-
-                            <article
-                                class="group mb-4 cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-white transition duration-300 hover:shadow-lg"
-                            >
-                                <div class="h-28 overflow-hidden bg-gray-200">
-                                    <img
-                                        src="https://images.unsplash.com/photo-1554224311-beee415c15c9?w=400"
-                                        class="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                                    />
-                                </div>
-                                <div class="p-3">
-                                    <p
-                                        class="mb-2 text-[10px] font-bold tracking-wider text-[#ff9c22] uppercase"
-                                    >
-                                        Tư Vấn
-                                    </p>
-                                    <h4
-                                        class="mb-2 line-clamp-2 text-sm font-bold text-gray-800 transition group-hover:text-[#ff9c22]"
-                                    >
-                                        Hướng dẫn cho thuê nhà đạt hiệu quả cao
-                                    </h4>
-                                    <p class="text-[11px] text-gray-500">
-                                        1 tuần trước
+                                        {{ formatDate(blog.created_at) }}
                                     </p>
                                 </div>
                             </article>
