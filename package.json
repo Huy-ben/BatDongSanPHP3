@@ -34,6 +34,8 @@
         "vue-tsc": "^2.2.4"
     },
     "dependencies": {
+        "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+        "@ckeditor/ckeditor5-vue": "^7.4.0",
         "@fortawesome/fontawesome-free": "^7.2.0",
         "@inertiajs/vue3": "^2.3.7",
         "@vueuse/core": "^12.8.2",

@@ -105,11 +105,15 @@ class PostController extends Controller
             'price' => ['required', 'numeric', 'min:0'],
             'area' => ['required', 'numeric', 'gt:0'],
             'address' => ['required', 'string', 'max:255'],
+            'location' => ['required', 'regex:/^-?\d{1,2}(?:\.\d+)?,\s?-?\d{1,3}(?:\.\d+)?$/'],
+            'description' => ['required', 'string', 'min:10'],
             'status' => ['required', 'in:0,1'],
             'images' => ['required', 'array', 'min:1', 'max:'.$limits['max_images']],
             'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ], [
             'images.max' => 'Số lượng ảnh vượt quá giới hạn của gói hiện tại.',
+            'location.required' => 'Vui lòng chọn địa chỉ trên bản đồ để lấy tọa độ.',
+            'location.regex' => 'Tọa độ không hợp lệ. Vui lòng chọn lại địa chỉ trên bản đồ.',
         ]);
 
         $postData = [
@@ -119,6 +123,8 @@ class PostController extends Controller
             'price' => $validated['price'],
             'area' => $validated['area'],
             'address' => $validated['address'],
+            'location' => $validated['location'],
+            'description' => $validated['description'],
             'status' => $validated['status'],
         ];
 

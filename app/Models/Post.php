@@ -19,6 +19,8 @@ class Post extends Model
         'price',
         'area',
         'address',
+        'location',
+        'description',
         'status',
     ];
 
@@ -27,6 +29,8 @@ class Post extends Model
         'category_id' => 'integer',
         'price' => 'integer',
         'area' => 'float',
+        'location' => 'string',
+        'description' => 'string',
         'status' => 'integer',
     ];
 

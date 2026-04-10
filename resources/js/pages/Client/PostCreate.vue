@@ -2,7 +2,13 @@
 import InputError from '@/components/InputError.vue'
 import ClientLayout from '@/layouts/ClientLayout.vue'
 import { useForm, usePage } from '@inertiajs/vue3'
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+
+declare global {
+    interface Window {
+        maplibregl?: any
+    }
+}
 
 type CategoryOption = {
     id: number
@@ -35,7 +41,19 @@ const statusOptions = [
 const localError = ref('')
 const imageFiles = ref<File[]>([])
 const imagePreviews = ref<string[]>([])
+const isSearchingAddress = ref(false)
+const suggestions = ref<any[]>([])
 const page = usePage()
+
+const GOONG_API_KEY = '9eQP8x4c9ulw5j1ycK7iAyTejVvUmHS7T9opYswn'
+const GOONG_MAP_KEY = 'NDYPjCSusn6YSEozAla1mgcP7pTXoFU3tIamrb9M'
+const DEFAULT_LOCATION = { lat: 16.047079, lng: 108.20623 }
+
+const mapContainerRef = ref<HTMLDivElement | null>(null)
+const mapRef = ref<any>(null)
+const markerRef = ref<any>(null)
+const ckEditorRef = ref<HTMLDivElement | null>(null)
+const ckEditorInstance = ref<any>(null)
 
 const form = useForm({
     title: '',
@@ -43,6 +61,8 @@ const form = useForm({
     price: '',
     area: '',
     address: '',
+    location: '',
+    description: '',
     status: '1',
     images: [] as File[],
 })
@@ -78,6 +98,162 @@ function capitalizeFirst(value?: string) {
     return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
+function parseLocation(value: string) {
+    const [latRaw, lngRaw] = (value || '').split(',').map((item) => item.trim())
+    const lat = Number(latRaw)
+    const lng = Number(lngRaw)
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return null
+    }
+
+    return { lat, lng }
+}
+
+function setLocation(lat: number, lng: number) {
+    form.location = `${lat.toFixed(6)},${lng.toFixed(6)}`
+}
+
+function ensureCkEditorAssets() {
+    return new Promise<void>((resolve, reject) => {
+        const win = window as any
+        if (win.ClassicEditor) {
+            resolve()
+            return
+        }
+
+        const scriptId = 'ckeditor-classic-script'
+        if (document.getElementById(scriptId)) {
+            const checkLoaded = () => {
+                if (win.ClassicEditor) {
+                    resolve()
+                } else {
+                    setTimeout(checkLoaded, 50)
+                }
+            }
+            checkLoaded()
+            return
+        }
+
+        const script = document.createElement('script')
+        script.id = scriptId
+        script.src = 'https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js'
+        script.async = true
+        script.onload = () => resolve()
+        script.onerror = () => reject(new Error('Khong the tai CKEditor'))
+        document.body.appendChild(script)
+    })
+}
+
+async function initCkEditor() {
+    await ensureCkEditorAssets()
+    await nextTick()
+
+    const win = window as any
+    if (!ckEditorRef.value || !win.ClassicEditor || ckEditorInstance.value) {
+        return
+    }
+
+    ckEditorInstance.value = await win.ClassicEditor.create(ckEditorRef.value, {
+        toolbar: [
+            'heading',
+            '|',
+            'bold',
+            'italic',
+            'underline',
+            'link',
+            'bulletedList',
+            'numberedList',
+            '|',
+            'blockQuote',
+            'insertTable',
+            'undo',
+            'redo',
+        ],
+    })
+
+    ckEditorInstance.value.setData(form.description || '')
+    ckEditorInstance.value.model.document.on('change:data', () => {
+        form.description = ckEditorInstance.value.getData()
+    })
+}
+
+function ensureMapLibreAssets() {
+    return new Promise<void>((resolve, reject) => {
+        if (window.maplibregl) {
+            resolve()
+            return
+        }
+
+        const cssId = 'maplibre-css'
+        if (!document.getElementById(cssId)) {
+            const link = document.createElement('link')
+            link.id = cssId
+            link.rel = 'stylesheet'
+            link.href = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css'
+            document.head.appendChild(link)
+        }
+
+        const script = document.createElement('script')
+        script.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js'
+        script.async = true
+        script.onload = () => resolve()
+        script.onerror = () => reject(new Error('Khong the tai MapLibre'))
+        document.body.appendChild(script)
+    })
+}
+
+function upsertMarker(lat: number, lng: number) {
+    if (!window.maplibregl || !mapRef.value) {
+        return
+    }
+
+    if (!markerRef.value) {
+        markerRef.value = new window.maplibregl.Marker({ color: '#ef4444', draggable: true })
+            .setLngLat([lng, lat])
+            .addTo(mapRef.value)
+
+        markerRef.value.on('dragend', () => {
+            const point = markerRef.value.getLngLat()
+            setLocation(point.lat, point.lng)
+            // Keep address unchanged as user requested.
+        })
+    } else {
+        markerRef.value.setLngLat([lng, lat])
+    }
+}
+
+async function initMap() {
+    await ensureMapLibreAssets()
+    await nextTick()
+
+    if (!mapContainerRef.value || !window.maplibregl || mapRef.value) {
+        return
+    }
+
+    const location = parseLocation(form.location) || DEFAULT_LOCATION
+
+    mapRef.value = new window.maplibregl.Map({
+        container: mapContainerRef.value,
+        style: `https://tiles.goong.io/assets/goong_map_web.json?api_key=${GOONG_MAP_KEY}`,
+        center: [location.lng, location.lat],
+        zoom: 14,
+    })
+
+    mapRef.value.on('load', () => {
+        upsertMarker(location.lat, location.lng)
+    })
+}
+
+function focusMapToLocation(lat: number, lng: number) {
+    if (!mapRef.value) {
+        return
+    }
+
+    mapRef.value.easeTo({ center: [lng, lat], zoom: 15 })
+    upsertMarker(lat, lng)
+}
+
 function handleImageChange(event: Event) {
     localError.value = ''
     const input = event.target as HTMLInputElement
@@ -102,6 +278,47 @@ function removeImage(index: number) {
     form.images = [...imageFiles.value]
 }
 
+async function searchPlace() {
+    if (!form.address || form.address.trim().length < 3) {
+        suggestions.value = []
+        return
+    }
+
+    try {
+        isSearchingAddress.value = true
+        const query = encodeURIComponent(form.address)
+        const response = await fetch(`https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=${query}`)
+        const data = await response.json()
+        suggestions.value = data.predictions || []
+    } catch {
+        suggestions.value = []
+    } finally {
+        isSearchingAddress.value = false
+    }
+}
+
+async function selectPlace(item: any) {
+    localError.value = ''
+    suggestions.value = []
+
+    try {
+        const response = await fetch(`https://rsapi.goong.io/Place/Detail?place_id=${item.place_id}&api_key=${GOONG_API_KEY}`)
+        const data = await response.json()
+        const location = data?.result?.geometry?.location
+
+        if (!location?.lat || !location?.lng) {
+            localError.value = 'Không thể lấy tọa độ từ địa chỉ đã chọn.'
+            return
+        }
+
+        form.address = item.description || form.address
+        setLocation(location.lat, location.lng)
+        focusMapToLocation(location.lat, location.lng)
+    } catch {
+        localError.value = 'Không thể lấy thông tin địa chỉ từ bản đồ.'
+    }
+}
+
 function submitPost() {
     localError.value = ''
 
@@ -115,11 +332,33 @@ function submitPost() {
         return
     }
 
+    if (!form.location) {
+        localError.value = 'Vui lòng chọn địa chỉ trên bản đồ để lấy tọa độ.'
+        return
+    }
+
     form.post('/dang-tin', {
         forceFormData: true,
         preserveScroll: true,
     })
 }
+
+onMounted(() => {
+    initMap()
+    initCkEditor()
+})
+
+onBeforeUnmount(() => {
+    if (mapRef.value) {
+        mapRef.value.remove()
+        mapRef.value = null
+    }
+
+    if (ckEditorInstance.value) {
+        ckEditorInstance.value.destroy()
+        ckEditorInstance.value = null
+    }
+})
 </script>
 
 <template>
@@ -208,9 +447,47 @@ function submitPost() {
 
                             <label class="md:col-span-2">
                                 <span class="mb-2 block text-sm font-semibold text-slate-700">Địa chỉ</span>
-                                <input v-model="form.address" type="text" placeholder="Nhập địa chỉ đầy đủ của sản phẩm" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+                                <input v-model="form.address" @input="searchPlace" type="text" placeholder="Nhập địa chỉ để tìm trên bản đồ" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100" />
+
+                                <div v-if="isSearchingAddress" class="mt-2 text-xs text-slate-500">Đang tìm địa chỉ...</div>
+                                <div v-if="suggestions.length" class="mt-2 max-h-44 overflow-auto rounded-2xl border border-slate-200 bg-white">
+                                    <button
+                                        v-for="item in suggestions"
+                                        :key="item.place_id"
+                                        type="button"
+                                        @click="selectPlace(item)"
+                                        class="block w-full border-b border-slate-100 px-3 py-2 text-left text-sm text-slate-700 last:border-b-0 hover:bg-slate-50"
+                                    >
+                                        {{ item.description }}
+                                    </button>
+                                </div>
+
                                 <InputError class="mt-1" :message="capitalizeFirst(form.errors.address)" />
                             </label>
+
+                            <label class="md:col-span-2">
+                                <span class="mb-2 block text-sm font-semibold text-slate-700">Tọa độ location (lat,lng)</span>
+                                <input v-model="form.location" type="text" readonly placeholder="Tọa độ sẽ được điền sau khi chọn địa chỉ" class="w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-700 outline-none" />
+                                <InputError class="mt-1" :message="capitalizeFirst(form.errors.location)" />
+                            </label>
+
+                            <div class="md:col-span-2">
+                                <span class="mb-2 block text-sm font-semibold text-slate-700">Mô tả chi tiết</span>
+                                <div class="overflow-hidden border border-slate-200 bg-white">
+                                    <textarea ref="ckEditorRef" class="min-h-96"></textarea>
+                                </div>
+                                <InputError class="mt-1" :message="capitalizeFirst(form.errors.description)" />
+                            </div>
+
+                            <div class="md:col-span-2 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                                <div class="border-b border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Bản đồ vị trí</div>
+                                <div class="h-64 w-full bg-slate-100">
+                                    <div ref="mapContainerRef" class="h-full w-full"></div>
+                                </div>
+                                <p class="border-t border-slate-200 px-4 py-2 text-xs text-slate-500">
+                                    Bạn có thể kéo ghim để cập nhật tọa độ. Địa chỉ sẽ giữ nguyên theo nội dung bạn đã nhập.
+                                </p>
+                            </div>
 
                             <label>
                                 <span class="mb-2 block text-sm font-semibold text-slate-700">Trạng thái</span>
@@ -306,6 +583,10 @@ function submitPost() {
                                     <p class="mt-4 text-sm leading-6 text-slate-600">
                                         {{ form.address || 'Địa chỉ đăng tin sẽ xuất hiện tại đây.' }}
                                     </p>
+                                    <div class="prose prose-sm mt-3 max-w-none text-slate-600" v-html="form.description || '<p>Chưa có mô tả chi tiết.</p>'"></div>
+                                    <p class="mt-2 text-xs text-slate-500">
+                                        Tọa độ: {{ form.location || 'Chưa có tọa độ' }}
+                                    </p>
                                 </div>
                             </div>
 
@@ -350,3 +631,9 @@ function submitPost() {
         </div>
     </ClientLayout>
 </template>
+
+<style scoped>
+:deep(.ck-editor__editable_inline) {
+    min-height: 420px;
+}
+</style>
