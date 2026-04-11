@@ -3,12 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
-    public function data()
+    public function data(Request $request)
     {
+        if (! $request->bearerToken()) {
+            return response()->json([
+                'message' => 'Bearer token is required.',
+            ], 401);
+        }
+
         $posts = DB::table('posts')
             ->leftJoin('images as thumbnail', function ($join) {
                 $join->on('thumbnail.product_id', '=', 'posts.id')

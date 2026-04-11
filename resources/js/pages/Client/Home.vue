@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Link } from '@inertiajs/vue3';
 import ClientLayout from '@/layouts/ClientLayout.vue';
 import { onMounted } from 'vue';
+import { getBearerAuthHeaders } from '@/services/config';
 const posts = ref([]);
 const categories = ref([]);
 const blogs = ref([]);
@@ -11,7 +12,9 @@ onMounted(() => {
     fetchHomeData();
 });
 const fetchHomeData = () => {
-    axios.get('/api/home')
+    axios.get('/api/home', {
+        headers: getBearerAuthHeaders(),
+    })
         .then(response => {
             posts.value = response.data.posts ?? [];
             categories.value = response.data.categories ?? [];
