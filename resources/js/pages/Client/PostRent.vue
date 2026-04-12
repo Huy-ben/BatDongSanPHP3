@@ -179,7 +179,7 @@ function formatDate(value) {
                                             class="mt-2.5 flex items-center gap-4"
                                         >
                                             <span
-                                                class="text-xl font-black text-[#ff9c22] italic"
+                                                class="text-lg font-bold text-gray-900"
                                                 >{{ formatPrice(post.price) }}</span
                                             >
                                             <span

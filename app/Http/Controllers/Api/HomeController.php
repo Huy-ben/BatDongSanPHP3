@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Blog;
+use App\Models\Category;
+use App\Models\Post;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -16,36 +18,36 @@ class HomeController extends Controller
             ], 401);
         }
 
-        $posts = DB::table('posts')
-            ->leftJoin('images as thumbnail', function ($join) {
-                $join->on('thumbnail.product_id', '=', 'posts.id')
-                    ->where('thumbnail.is_thumbnail', '=', 1);
-            })
-            ->join('categories as child_category', 'child_category.id', '=', 'posts.category_id')
-            ->leftJoin('categories as parent_category', 'parent_category.id', '=', 'child_category.parent_id')
-            ->select(
-                'posts.id',
-                'posts.title',
-                'posts.price',
-                'posts.area',
-                'posts.address',
-                'child_category.category_name',
-                DB::raw('COALESCE(parent_category.category_name, "") as listing_type'),
-                DB::raw('COALESCE(thumbnail.image_url, "") as img')
-            )
-            ->orderByDesc('posts.id')
+        $posts = Post::query()
+            ->with([
+                'category:id,category_name,parent_id',
+                'category.parentCategory:id,category_name',
+                'thumbnailImage:id,product_id,image_url',
+            ])
+            ->orderByDesc('id')
             ->limit(24)
+            ->get()
+            ->map(function (Post $post) {
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'price' => $post->price,
+                    'area' => $post->area,
+                    'address' => $post->address,
+                    'category_name' => $post->category?->category_name ?? '',
+                    'listing_type' => $post->category?->parentCategory?->category_name ?? '',
+                    'img' => $post->thumbnailImage?->image_url ?? '',
+                ];
+            });
+
+        $categories = Category::query()
+            ->whereRelation('parentCategory', 'category_name', 'Bán')
+            ->whereNotNull('image')
+            ->select('id', 'category_name', 'image')
+            ->orderBy('id')
             ->get();
 
-        $categories = DB::table('categories as child_category')
-            ->join('categories as parent_category', 'parent_category.id', '=', 'child_category.parent_id')
-            ->where('parent_category.category_name', 'Bán')
-            ->whereNotNull('child_category.image')
-            ->select('child_category.id', 'child_category.category_name', 'child_category.image')
-            ->orderBy('child_category.id')
-            ->get();
-
-        $blogs = DB::table('blogs')
+        $blogs = Blog::query()
             ->where('status', 'published')
             ->select('id', 'title', 'slug', 'image', 'excerpt', 'created_at')
             ->orderByDesc('id')

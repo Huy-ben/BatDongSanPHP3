@@ -162,7 +162,7 @@ function formatDate(value) {
 
                                 <div class="flex flex-1 flex-col justify-between p-5">
                                     <div>
-                                        <h3 class="line-clamp-2 text-base font-semibold text-gray-800 transition duration-200 group-hover:text-gray-900">
+                                        <h3 class="line-clamp-2 text-base font-semibold text-gray-800 transition duration-200 group-hover:text-[#ff9c22]">
                                             {{ post.title }}
                                         </h3>
                                         <div class="mt-3 flex flex-wrap items-center gap-3">
