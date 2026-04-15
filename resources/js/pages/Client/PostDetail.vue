@@ -821,13 +821,6 @@ onUnmounted(() => {
                                 </span>
                                 Chat qua Zalo
                             </a>
-                            <div class="mt-3 flex justify-center">
-                                <a
-                                    href="#"
-                                    class="text-brand text-xs font-medium hover:underline"
-                                    >Xem thêm tin ›</a
-                                >
-                            </div>
                         </div>
 
                         <!-- RELATED SIDEBAR LINKS -->

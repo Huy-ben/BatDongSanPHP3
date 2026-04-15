@@ -201,6 +201,14 @@ function goToPage(page) {
 
     fetchPosts(page);
 }
+
+function goToPostDetail(postId) {
+    if (!postId) {
+        return;
+    }
+
+    window.location.href = `/post-detail/${postId}`;
+}
 </script>
 
 <template>
@@ -359,6 +367,10 @@ function goToPage(page) {
                                         v-for="post in posts"
                                         :key="post.id"
                                         class="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-300 hover:border-[#ff9c22]/50 hover:shadow-xl md:flex-row"
+                                        role="button"
+                                        tabindex="0"
+                                        @click="goToPostDetail(post.id)"
+                                        @keydown.enter="goToPostDetail(post.id)"
                                     >
                                 <div
                                     class="relative h-52 shrink-0 overflow-hidden md:w-80"
@@ -404,9 +416,8 @@ function goToPage(page) {
                                             </span>
                                         </div>
                                         <p
-                                            class="mt-3 line-clamp-2 text-xs leading-relaxed text-gray-500"
+                                           v-html="post.description" class="mt-3 line-clamp-2 text-xs leading-relaxed text-gray-500"
                                         >
-                                            {{ post.description }}
                                         </p>
                                     </div>
                                     <div
@@ -434,6 +445,7 @@ function goToPage(page) {
                                         <a
                                             :href="`https://zalo.me/${post.seller_phone || ''}`"
                                             class="z-10 flex items-center gap-2 rounded-lg border border-[#ff9c22] px-4 py-2 text-xs font-bold text-[#ff9c22] uppercase transition duration-300 hover:bg-[#ff9c22] hover:text-white"
+                                            @click.stop
                                         >
                                             <i
                                                 class="fa-solid fa-phone-volume"

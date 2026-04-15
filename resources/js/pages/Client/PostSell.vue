@@ -201,6 +201,14 @@ function goToPage(page) {
 
     fetchPosts(page);
 }
+
+function goToPostDetail(postId) {
+    if (!postId) {
+        return;
+    }
+
+    window.location.href = `/post-detail/${postId}`;
+}
 </script>
 
 <template>
@@ -350,6 +358,10 @@ function goToPage(page) {
                                 v-for="post in posts"
                                 :key="post.id"
                                 class="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:border-gray-300 hover:shadow-md md:flex-row"
+                                role="button"
+                                tabindex="0"
+                                @click="goToPostDetail(post.id)"
+                                @keydown.enter="goToPostDetail(post.id)"
                             >
                                 <div class="relative h-48 shrink-0 overflow-hidden bg-gray-100 md:w-72">
                                     <div class="grid h-full grid-cols-2 grid-rows-2 gap-0.5">
@@ -382,8 +394,7 @@ function goToPage(page) {
                                                 <i class="fa-solid fa-location-dot text-[#ff9c22] mr-1"></i> {{ post.address }}
                                             </span>
                                         </div>
-                                        <p class="mt-3 line-clamp-2 text-[13px] leading-relaxed text-gray-500">
-                                            {{ post.description }}
+                                        <p v-html="post.description" class="mt-3 line-clamp-2 text-[13px] leading-relaxed text-gray-500">
                                         </p>
                                     </div>
 
@@ -395,7 +406,7 @@ function goToPage(page) {
                                                 <p class="mt-1 text-[10px] text-gray-400">{{ post.category_name }}</p>
                                             </div>
                                         </div>
-                                        <a :href="`https://zalo.me/${post.seller_phone || ''}`" class="flex items-center gap-2 rounded-md border border-[#ff9c22]/40 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-[#ff9c22] transition hover:bg-[#ff9c22] hover:text-white">
+                                        <a :href="`https://zalo.me/${post.seller_phone || ''}`" class="flex items-center gap-2 rounded-md border border-[#ff9c22]/40 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-[#ff9c22] transition hover:bg-[#ff9c22] hover:text-white" @click.stop>
                                             <i class="fa-solid fa-phone-volume"></i> {{ maskPhone(post.seller_phone) }}
                                         </a>
                                     </div>

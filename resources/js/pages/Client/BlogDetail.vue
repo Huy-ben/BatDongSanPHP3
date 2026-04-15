@@ -237,7 +237,7 @@ onMounted(() => {
               </div>
             </section>
 
-            <section class="rounded-xl border border-slate-200 bg-white p-5">
+            <!-- <section class="rounded-xl border border-slate-200 bg-white p-5">
               <div class="mb-3 border-b border-slate-200 pb-3">
                 <h3 class="inline-block border-b-2 border-brand pb-1 text-sm font-extrabold">Danh mục</h3>
               </div>
@@ -251,7 +251,7 @@ onMounted(() => {
                   <span class="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">{{ category.count }}</span>
                 </div>
               </div>
-            </section>
+            </section> -->
           </aside>
         </div>
       </main>
