@@ -52,19 +52,19 @@ const milestones = [
 
 const teamMembers = [
     {
-        name: 'Trần Minh Khang',
-        role: 'Giám đốc điều hành',
-        avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&auto=format&fit=crop&q=80',
+        name: 'Phạm Huy Bền',
+        role: 'Tổng giám đốc' ,
+        avatar: 'https://res.cloudinary.com/dfa75ewka/image/upload/v1766037636/eruhjc09wl3afehj0ddy.jpg',
     },
     {
-        name: 'Nguyễn Khánh Linh',
-        role: 'Trưởng bộ phận tư vấn',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
+        name: 'Nguyễn Hoàng Bảo',
+        role: 'Giám đốc điều hành' ,
+        avatar: 'https://res.cloudinary.com/dfa75ewka/image/upload/v1776148220/z7724101573563_fd1d64919c2c44464ce0c9d6691b53e6_ji7x35.jpg',
     },
     {
-        name: 'Lê Quốc Đạt',
-        role: 'Quản lý phát triển thị trường',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+        name: 'Đinh Quốc Toàn',
+        role: 'Giám đốc phát triển kinh doanh' ,
+        avatar: 'https://res.cloudinary.com/dfa75ewka/image/upload/v1776148220/avatar_qf8omb.jpg',
     },
 ];
 </script>
@@ -245,7 +245,7 @@ const teamMembers = [
             </section>
 
             <section class="mx-auto max-w-7xl px-6 py-14">
-                <div class="mb-8">
+                <div class="mb-12">
                     <p
                         class="text-xs font-semibold tracking-[0.2em] text-orange-500 uppercase"
                     >
@@ -259,25 +259,28 @@ const teamMembers = [
                 </div>
 
                 <div
-                    class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+                    class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
                 >
                     <article
                         v-for="member in teamMembers"
                         :key="member.name"
-                        class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
+                        class="group text-center"
                     >
-                        <img
-                            :src="member.avatar"
-                            :alt="member.name"
-                            class="h-64 w-full object-cover"
-                        />
-                        <div class="p-5">
-                            <h3 class="text-base font-bold text-zinc-900">
+                        <div class="relative overflow-hidden rounded-full aspect-square mb-4 shadow-lg border-4 border-orange-200 transition-all duration-300 group-hover:border-orange-400 group-hover:shadow-xl mx-auto w-52">
+                            <img
+                                :src="member.avatar"
+                                :alt="member.name"
+                                class="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                            />
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-zinc-900 group-hover:text-orange-500 transition-colors">
                                 {{ member.name }}
                             </h3>
-                            <p class="mt-1 text-sm text-gray-600">
+                            <p class="mt-2 text-sm font-semibold text-orange-500">
                                 {{ member.role }}
                             </p>
+                            <p class="mt-3 text-xs text-gray-500">Thành viên hội đồng quản lý BTB</p>
                         </div>
                     </article>
                 </div>
