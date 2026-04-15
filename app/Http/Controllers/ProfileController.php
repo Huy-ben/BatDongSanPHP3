@@ -51,6 +51,7 @@ class ProfileController extends Controller
                         'status' => (string) $post->status === '1',
                         'created_at' => $post->created_at?->format('d/m/Y'),
                         'thumbnail' => $post->thumbnailImage?->image_url,
+                        'edit_url' => route('post-edit', $post),
                     ];
                 })->values()->all(),
                 'current_page' => $posts->currentPage(),

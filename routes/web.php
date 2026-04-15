@@ -28,6 +28,8 @@ Route::get('post-detail/{postIdentifier?}', [PostController::class, 'detail'])->
 Route::middleware(['auth'])->group(function () {
     Route::get('dang-tin', [PostController::class, 'create'])->name('post-create');
     Route::post('dang-tin', [PostController::class, 'store'])->name('post-store');
+    Route::get('sua-tin/{post}', [PostController::class, 'edit'])->name('post-edit');
+    Route::patch('sua-tin/{post}', [PostController::class, 'update'])->name('post-update');
 });
 Route::get('package', PackageController::class)->name('package');
 Route::inertia('thanh-toan', 'Client/Payment')->name('payment');

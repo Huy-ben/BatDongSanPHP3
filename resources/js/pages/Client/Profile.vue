@@ -184,7 +184,7 @@ const goToPage = (page) => {
     <ClientLayout>
         <div class="min-h-screen bg-slate-100 pb-10 text-slate-900">
             <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-                <div class="overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-orange-500 to-amber-500 px-6 py-12 text-center text-white shadow-glow sm:px-10">
+                <div class="overflow-hidden rounded-3xl bg-linear-to-br from-brand-500 via-orange-500 to-amber-500 px-6 py-12 text-center text-white shadow-glow sm:px-10">
                     <p class="text-xs font-semibold tracking-[0.24em] uppercase text-orange-100">Hồ sơ cá nhân</p>
                     <h1 class="mt-3 text-2xl leading-tight font-black sm:text-3xl">Quản lý thông tin tài khoản và tin đăng của bạn</h1>
                     <p class="mt-2 max-w-3xl text-sm text-slate-200 text-center mx-auto">
@@ -342,6 +342,12 @@ const goToPage = (page) => {
                                                 <p><i class="fa-solid fa-location-dot mr-2 text-slate-400"></i>{{ post.address }}</p>
                                                 <p><i class="fa-regular fa-calendar mr-2 text-slate-400"></i>{{ post.created_at }}</p>
                                             </div>
+                                            <a
+                                                :href="post.edit_url"
+                                                class="mt-4 inline-flex items-center justify-center rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-xs font-bold tracking-[0.16em] text-orange-700 uppercase transition hover:bg-orange-100"
+                                            >
+                                                Sửa bài đăng
+                                            </a>
                                         </div>
                                     </div>
                                 </article>

@@ -2,7 +2,15 @@
 import InputError from '@/components/InputError.vue';
 import ClientLayout from '@/layouts/ClientLayout.vue';
 import { useForm, usePage } from '@inertiajs/vue3';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import {
+    computed,
+    markRaw,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    shallowRef,
+} from 'vue';
 
 declare global {
     interface Window {
@@ -13,6 +21,25 @@ declare global {
 type CategoryOption = {
     id: number;
     category_name: string;
+};
+
+type PostImage = {
+    id: number;
+    image_url: string;
+    is_thumbnail: boolean;
+};
+
+type PostData = {
+    id: number;
+    title: string;
+    category_id: number;
+    price: number;
+    area: number;
+    address: string;
+    location: string;
+    description: string;
+    status: string;
+    images: PostImage[];
 };
 
 type PackageLimits = {
@@ -31,6 +58,7 @@ const props = defineProps<{
     } | null;
     packageLimits: PackageLimits;
     todayPostCount: number;
+    post?: PostData | null;
 }>();
 
 const statusOptions = [
@@ -40,10 +68,16 @@ const statusOptions = [
 
 const localError = ref('');
 const imageFiles = ref<File[]>([]);
-const imagePreviews = ref<string[]>([]);
+const imagePreviews = ref<string[]>(props.post?.images?.map((image) => image.image_url) ?? []);
+const initialThumbnailIndex = props.post?.images?.findIndex((image) => image.is_thumbnail) ?? -1;
+const thumbnailIndex = ref(initialThumbnailIndex >= 0 ? initialThumbnailIndex : 0);
+const previewSources = ref<Array<'existing' | 'new'>>(
+    props.post?.images?.map(() => 'existing' as const) ?? [],
+);
 const isSearchingAddress = ref(false);
 const suggestions = ref<any[]>([]);
 const page = usePage();
+const isEditing = computed(() => Boolean(props.post));
 
 const GOONG_API_KEY = '9eQP8x4c9ulw5j1ycK7iAyTejVvUmHS7T9opYswn';
 const GOONG_MAP_KEY = 'NDYPjCSusn6YSEozAla1mgcP7pTXoFU3tIamrb9M';
@@ -53,21 +87,24 @@ const mapContainerRef = ref<HTMLDivElement | null>(null);
 const mapRef = ref<any>(null);
 const markerRef = ref<any>(null);
 const ckEditorRef = ref<HTMLDivElement | null>(null);
-const ckEditorInstance = ref<any>(null);
+const ckEditorInstance = shallowRef<any>(null);
 
 const form = useForm({
-    title: '',
-    category_id: props.categories[0]?.id ?? '',
-    price: '',
-    area: '',
-    address: '',
-    location: '',
-    description: '',
-    status: '1',
+    title: props.post?.title ?? '',
+    category_id: props.post?.category_id ?? props.categories[0]?.id ?? '',
+    price: props.post?.price ? String(props.post.price) : '',
+    area: props.post?.area ? String(props.post.area) : '',
+    address: props.post?.address ?? '',
+    location: props.post?.location ?? '',
+    description: props.post?.description ?? '',
+    status: props.post?.status ?? '1',
     images: [] as File[],
+    thumbnail_index: thumbnailIndex.value,
 });
 
-const coverImage = computed(() => imagePreviews.value[0] || '');
+const coverImage = computed(() => {
+    return imagePreviews.value[thumbnailIndex.value] || imagePreviews.value[0] || '';
+});
 const imageCount = computed(() => imageFiles.value.length);
 const remainingPostsToday = computed(() => {
     if (props.packageLimits.max_posts_per_day === null) {
@@ -81,6 +118,10 @@ const remainingPostsToday = computed(() => {
 });
 
 const canSubmit = computed(() => {
+    if (isEditing.value) {
+        return true;
+    }
+
     if (!props.hasActivePackage) {
         return false;
     }
@@ -160,7 +201,8 @@ async function initCkEditor() {
         return;
     }
 
-    ckEditorInstance.value = await win.ClassicEditor.create(ckEditorRef.value, {
+    const editor = markRaw(
+        await win.ClassicEditor.create(ckEditorRef.value, {
         toolbar: [
             'heading',
             '|',
@@ -176,11 +218,14 @@ async function initCkEditor() {
             'undo',
             'redo',
         ],
-    });
+        }),
+    );
 
-    ckEditorInstance.value.setData(form.description || '');
-    ckEditorInstance.value.model.document.on('change:data', () => {
-        form.description = ckEditorInstance.value.getData();
+    ckEditorInstance.value = editor;
+
+    editor.setData(form.description || '');
+    editor.model.document.on('change:data', () => {
+        form.description = editor.getData();
     });
 }
 
@@ -279,13 +324,34 @@ function handleImageChange(event: Event) {
 
     imageFiles.value = files;
     imagePreviews.value = files.map((file) => URL.createObjectURL(file));
+    previewSources.value = files.map(() => 'new' as const);
+    thumbnailIndex.value = 0;
     form.images = files;
+    form.thumbnail_index = 0;
 }
 
 function removeImage(index: number) {
+    if (previewSources.value[index] === 'existing') {
+        return;
+    }
+
     imageFiles.value.splice(index, 1);
     imagePreviews.value.splice(index, 1);
+    previewSources.value.splice(index, 1);
+
+    if (thumbnailIndex.value >= imagePreviews.value.length) {
+        thumbnailIndex.value = Math.max(0, imagePreviews.value.length - 1);
+    } else if (index < thumbnailIndex.value) {
+        thumbnailIndex.value -= 1;
+    }
+
     form.images = [...imageFiles.value];
+    form.thumbnail_index = thumbnailIndex.value;
+}
+
+function setThumbnail(index: number) {
+    thumbnailIndex.value = index;
+    form.thumbnail_index = index;
 }
 
 async function searchPlace() {
@@ -336,7 +402,11 @@ async function selectPlace(item: any) {
 function submitPost() {
     localError.value = '';
 
-    if (!props.hasActivePackage) {
+    if (ckEditorInstance.value) {
+        form.description = ckEditorInstance.value.getData();
+    }
+
+    if (!isEditing.value && !props.hasActivePackage) {
         localError.value = 'Tài khoản chưa có gói đăng tin còn hiệu lực.';
         return;
     }
@@ -348,6 +418,17 @@ function submitPost() {
 
     if (!form.location) {
         localError.value = 'Vui lòng chọn địa chỉ trên bản đồ để lấy tọa độ.';
+        return;
+    }
+
+    form.thumbnail_index = thumbnailIndex.value;
+
+    if (isEditing.value && props.post) {
+        form.patch(`/dang-tin/${props.post.id}`, {
+            forceFormData: true,
+            preserveScroll: true,
+        });
+
         return;
     }
 
@@ -391,13 +472,16 @@ onBeforeUnmount(() => {
                             <span
                                 class="h-2 w-2 rounded-full bg-orange-500"
                             ></span>
-                            Đăng tin dành cho seller
+                            {{ isEditing ? 'Chỉnh sửa bài đăng' : 'Đăng tin dành cho seller' }}
                         </div>
                         <h1
                             class="mx-auto mt-4 max-w-2xl text-3xl leading-tight font-black text-slate-950 md:text-4xl"
                         >
-                            Tạo tin đăng bất động sản với đầy đủ thông tin chỉ
-                            trong một form.
+                            {{
+                                isEditing
+                                    ? 'Cập nhật tin đăng bất động sản của bạn.'
+                                    : 'Tạo tin đăng bất động sản với đầy đủ thông tin chỉ trong một form.'
+                            }}
                         </h1>
                         <p
                             class="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-600"
@@ -471,7 +555,7 @@ onBeforeUnmount(() => {
             </section>
 
             <section
-                v-if="!hasActivePackage"
+                v-if="!hasActivePackage && !isEditing"
                 class="mx-auto w-full max-w-6xl px-4 pt-8 lg:px-6"
             >
                 <div
@@ -496,10 +580,10 @@ onBeforeUnmount(() => {
                             <p
                                 class="text-xs font-semibold tracking-[0.25em] text-orange-600 uppercase"
                             >
-                                Thông tin bài đăng
+                                {{ isEditing ? 'Thông tin bài đăng' : 'Thông tin bài đăng' }}
                             </p>
                             <h2 class="mt-2 text-xl font-black text-slate-950">
-                                Nhập các trường theo bảng posts
+                                {{ isEditing ? 'Chỉnh sửa nội dung bài đăng' : 'Nhập các trường theo bảng posts' }}
                             </h2>
                         </div>
 
@@ -750,8 +834,8 @@ onBeforeUnmount(() => {
                                     >Bấm để tải ảnh lên</span
                                 >
                                 <span class="mt-2 text-sm text-slate-500"
-                                    >Chọn nhiều ảnh. Ảnh đầu tiên sẽ lưu làm
-                                    thumbnail.</span
+                                    >Chọn nhiều ảnh và bấm "Đặt làm thumbnail"
+                                    cho ảnh đại diện bạn muốn.</span
                                 >
                             </label>
                             <InputError
@@ -795,12 +879,21 @@ onBeforeUnmount(() => {
                                             class="absolute top-2 left-2 rounded-full bg-black/60 px-2 py-1 text-[10px] font-bold text-white"
                                         >
                                             {{
-                                                index === 0
+                                                index === thumbnailIndex
                                                     ? 'Cover'
                                                     : `#${index + 1}`
                                             }}
                                         </div>
                                         <button
+                                            v-if="previewSources[index] === 'new'"
+                                            type="button"
+                                            class="absolute bottom-2 left-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-slate-700"
+                                            @click="setThumbnail(index)"
+                                        >
+                                            Đặt làm thumbnail
+                                        </button>
+                                        <button
+                                            v-if="previewSources[index] === 'new'"
                                             type="button"
                                             class="absolute top-2 right-2 rounded-full bg-red-500 px-2 py-1 text-[10px] font-bold text-white"
                                             @click="removeImage(index)"
@@ -820,12 +913,16 @@ onBeforeUnmount(() => {
                             >
                                 {{
                                     form.processing
-                                        ? 'Đang đăng...'
-                                        : 'Đăng tin ngay'
+                                        ? isEditing
+                                            ? 'Đang cập nhật...'
+                                            : 'Đang đăng...'
+                                        : isEditing
+                                            ? 'Cập nhật bài đăng'
+                                            : 'Đăng tin ngay'
                                 }}
                             </button>
                             <p
-                                v-if="hasActivePackage && !canSubmit"
+                                v-if="!isEditing && hasActivePackage && !canSubmit"
                                 class="text-sm font-medium text-amber-700"
                             >
                                 Bạn đã chạm giới hạn số tin trong ngày theo gói

@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Image;
 use App\Models\Post;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Response;
 
@@ -24,55 +25,102 @@ class PostController extends Controller
         '2' => ['name' => 'SVIP', 'max_images' => 30, 'max_posts_per_day' => null],
     ];
 
-    public function create(Request $request): Response
+    private function resolveActivePackage(?int $userId)
     {
-        $user = $request->user();
+        if (! $userId) {
+            return null;
+        }
 
-        $activePackage = DB::table('listing_packages')
-            ->where('user_id', $user?->id)
+        return DB::table('listing_packages')
+            ->where('user_id', $userId)
             ->where('status', '1')
             ->whereDate('expiry_date', '>=', now()->toDateString())
             ->orderByDesc('expiry_date')
             ->first(['id', 'package_name', 'package_type', 'expiry_date']);
+    }
 
-        $limits = self::PACKAGE_LIMITS[$activePackage->package_type ?? ''] ?? [
+    private function resolvePackageLimits(?string $packageType): array
+    {
+        return self::PACKAGE_LIMITS[$packageType ?? ''] ?? [
             'name' => 'Chưa có gói',
-            'max_images' => 0,
-            'max_posts_per_day' => 0,
+            'max_images' => 30,
+            'max_posts_per_day' => null,
         ];
+    }
 
-        $todayPostCount = 0;
-        if ($user) {
-            $todayPostCount = Post::query()
-                ->where('seller_id', $user->id)
-                ->whereDate('created_at', now()->toDateString())
-                ->count();
+    private function mapPostImages(Post $post): array
+    {
+        return $post->images()
+            ->orderByDesc('is_thumbnail')
+            ->orderBy('id')
+            ->get(['id', 'image_url', 'is_thumbnail'])
+            ->map(function (Image $image): array {
+                return [
+                    'id' => $image->id,
+                    'image_url' => $image->image_url,
+                    'is_thumbnail' => (bool) $image->is_thumbnail,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function replacePostImages(Post $post, array $imageFiles, int $thumbnailIndex = 0): void
+    {
+        $post->images()->get()->each(function (Image $image): void {
+            $path = str_replace('/storage/', '', $image->image_url);
+            Storage::disk('public')->delete($path);
+            $image->delete();
+        });
+
+        $thumbnailIndex = max(0, min($thumbnailIndex, count($imageFiles) - 1));
+
+        foreach ($imageFiles as $index => $imageFile) {
+            $path = $imageFile->store('posts', 'public');
+
+            Image::create([
+                'product_id' => $post->id,
+                'image_url' => '/storage/'.$path,
+                'is_thumbnail' => $index === $thumbnailIndex,
+            ]);
         }
+    }
 
-        $categories = Category::query()
-            ->where('status', '1')
-            ->orderBy('category_name')
-            ->get(['id', 'category_name']);
+    public function create(Request $request): Response
+    {
+        return inertia('Client/PostCreate', $this->formPayload($request));
+    }
 
-        return inertia('Client/PostCreate', [
-            'categories' => $categories,
+    public function edit(Request $request, Post $post): Response
+    {
+        $this->ensureOwnership($request, $post);
+
+        $activePackage = $this->resolveActivePackage($request->user()?->id);
+
+        return inertia('Client/PostEdit', array_merge($this->formPayload($request), [
+            'post' => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'category_id' => $post->category_id,
+                'price' => $post->price,
+                'area' => $post->area,
+                'address' => $post->address,
+                'location' => $post->location,
+                'description' => $post->description,
+                'status' => (string) $post->status,
+                'images' => $this->mapPostImages($post),
+            ],
             'hasActivePackage' => (bool) $activePackage,
             'activePackage' => $activePackage,
-            'packageLimits' => $limits,
-            'todayPostCount' => $todayPostCount,
-        ]);
+            'packageLimits' => $this->resolvePackageLimits($activePackage?->package_type),
+        ]));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
 
-        $activePackage = DB::table('listing_packages')
-            ->where('user_id', $user->id)
-            ->where('status', '1')
-            ->whereDate('expiry_date', '>=', now()->toDateString())
-            ->orderByDesc('expiry_date')
-            ->first(['id', 'package_name', 'package_type', 'expiry_date']);
+        $activePackage = $this->resolveActivePackage($user->id);
 
         if (! $activePackage) {
             return back()->withErrors([
@@ -110,11 +158,15 @@ class PostController extends Controller
             'status' => ['required', 'in:0,1'],
             'images' => ['required', 'array', 'min:1', 'max:'.$limits['max_images']],
             'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'thumbnail_index' => ['nullable', 'integer', 'min:0'],
         ], [
             'images.max' => 'Số lượng ảnh vượt quá giới hạn của gói hiện tại.',
             'location.required' => 'Vui lòng chọn địa chỉ trên bản đồ để lấy tọa độ.',
             'location.regex' => 'Tọa độ không hợp lệ. Vui lòng chọn lại địa chỉ trên bản đồ.',
         ]);
+
+        $thumbnailIndex = (int) ($validated['thumbnail_index'] ?? 0);
+        $thumbnailIndex = max(0, min($thumbnailIndex, count($validated['images']) - 1));
 
         $postData = [
             'title' => $validated['title'],
@@ -140,21 +192,115 @@ class PostController extends Controller
             Image::create([
                 'product_id' => $post->id,
                 'image_url' => '/storage/'.$path,
-                'is_thumbnail' => $index === 0,
+                'is_thumbnail' => $index === $thumbnailIndex,
             ]);
         }
 
-        return redirect()->route('profile')->with('status', 'post-created');
+        return redirect()->route('post-edit', $post)->with('status', 'post-created');
+    }
+
+    public function update(Request $request, Post $post): RedirectResponse
+    {
+        $this->ensureOwnership($request, $post);
+
+        $activePackage = $this->resolveActivePackage($request->user()?->id);
+        $limits = $this->resolvePackageLimits($activePackage?->package_type);
+
+        if (! $request->hasFile('images')) {
+            $request->request->remove('images');
+        }
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'area' => ['required', 'numeric', 'gt:0'],
+            'address' => ['required', 'string', 'max:255'],
+            'location' => ['required', 'regex:/^-?\d{1,2}(?:\.\d+)?,\s?-?\d{1,3}(?:\.\d+)?$/'],
+            'description' => ['required', 'string', 'min:10'],
+            'status' => ['required', 'in:0,1'],
+            'images' => ['nullable', 'array', 'max:'.$limits['max_images']],
+            'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'thumbnail_index' => ['nullable', 'integer', 'min:0'],
+        ], [
+            'images.max' => 'Số lượng ảnh vượt quá giới hạn của gói hiện tại.',
+            'location.required' => 'Vui lòng chọn địa chỉ trên bản đồ để lấy tọa độ.',
+            'location.regex' => 'Tọa độ không hợp lệ. Vui lòng chọn lại địa chỉ trên bản đồ.',
+        ]);
+
+        DB::transaction(function () use ($post, $validated): void {
+            $originalTitle = $post->title;
+
+            $post->fill([
+                'title' => $validated['title'],
+                'category_id' => (int) $validated['category_id'],
+                'price' => $validated['price'],
+                'area' => $validated['area'],
+                'address' => $validated['address'],
+                'location' => $validated['location'],
+                'description' => $validated['description'],
+                'status' => $validated['status'],
+            ]);
+
+            if (Schema::hasColumn('posts', 'slug') && $originalTitle !== $validated['title']) {
+                $post->slug = Str::slug($validated['title']).'-'.Str::random(8);
+            }
+
+            $post->save();
+
+            if (! empty($validated['images'])) {
+                $thumbnailIndex = (int) ($validated['thumbnail_index'] ?? 0);
+                $this->replacePostImages($post, $validated['images'], $thumbnailIndex);
+            }
+        });
+
+        return redirect()->route('post-edit', $post)->with('status', 'post-updated');
     }
 
     public function postsell()
     {
         return inertia('Client/PostSell');
     }
+
     public function postrent()
     {
         return inertia('Client/PostRent');
     }
+
+    private function formPayload(Request $request): array
+    {
+        $user = $request->user();
+
+        $activePackage = $this->resolveActivePackage($user?->id);
+        $limits = $this->resolvePackageLimits($activePackage?->package_type);
+
+        $todayPostCount = 0;
+        if ($user) {
+            $todayPostCount = Post::query()
+                ->where('seller_id', $user->id)
+                ->whereDate('created_at', now()->toDateString())
+                ->count();
+        }
+
+        $categories = Category::query()
+            ->where('status', '1')
+            ->orderBy('category_name')
+            ->get(['id', 'category_name']);
+
+        return [
+            'categories' => $categories,
+            'hasActivePackage' => (bool) $activePackage,
+            'activePackage' => $activePackage,
+            'packageLimits' => $limits,
+            'todayPostCount' => $todayPostCount,
+        ];
+    }
+
+    private function ensureOwnership(Request $request, Post $post): void
+    {
+        abort_unless($request->user()?->id === $post->seller_id, 403);
+    }
+
     public function detail(Request $request, ?string $postIdentifier = null): Response
     {
         $postQuery = Post::query()
