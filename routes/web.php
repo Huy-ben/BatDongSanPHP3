@@ -23,7 +23,7 @@ Route::inertia('/', 'Client/Home')->name('home');
 // Post
 Route::inertia('post-sell', 'Client/PostSell')->name('post-sell');
 Route::inertia('post-rent', 'Client/PostRent')->name('post-rent');
-Route::inertia('post-detail', 'Client/PostDetail')->name('post-detail');
+Route::get('post-detail/{postIdentifier?}', [PostController::class, 'detail'])->name('post-detail');
 Route::middleware(['auth'])->group(function () {
     Route::get('dang-tin', [PostController::class, 'create'])->name('post-create');
     Route::post('dang-tin', [PostController::class, 'store'])->name('post-store');

@@ -1,64 +1,303 @@
 <script setup lang="ts">
-import Footer from '@/components/btbcomponents/Footer.vue';
 import ClientLayout from '@/layouts/ClientLayout.vue';
-import { onMounted, onUnmounted } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 
-const images = [
+declare global {
+    interface Window {
+        maplibregl?: any;
+    }
+}
+
+type DetailPost = {
+    id: number;
+    slug: string;
+    title: string;
+    price: number | string;
+    area: number | string;
+    address: string;
+    location: string;
+    description: string;
+    created_at: string | null;
+    expires_at: string | null;
+    category_name: string;
+    listing_type: string;
+    images: string[];
+    seller_name: string;
+    seller_phone: string;
+    seller_avatar: string;
+    seller_post_count: number;
+};
+
+type RelatedPost = {
+    id: number;
+    title: string;
+    price: number | string;
+    address: string;
+    img: string;
+};
+
+type FeaturedPost = {
+    id: number;
+    title: string;
+    price: number | string;
+    address: string;
+    img: string;
+    category_name: string;
+    listing_type: string;
+    seller_name: string;
+    seller_avatar: string;
+};
+
+type GalleryImage = {
+    src: string;
+    label: string;
+};
+
+const props = defineProps<{
+    post: DetailPost | null;
+    relatedPosts: RelatedPost[];
+    featuredPosts: FeaturedPost[];
+}>();
+
+const fallbackImages: GalleryImage[] = [
     {
         src: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=85',
-        label: 'Phòng khách',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=85',
-        label: 'Phòng ngủ master',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=85',
-        label: 'Toàn cảnh ban ngày',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=1200&q=85',
-        label: 'Phòng bếp',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85',
-        label: 'Hồ bơi riêng',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=1200&q=85',
-        label: 'Phòng ngủ 2',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=85',
-        label: 'Sân vườn thượng tầng',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&q=85',
-        label: 'Phòng tắm',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=85',
-        label: 'View ban công',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=1200&q=85',
-        label: 'Phòng gym',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&q=85',
-        label: 'Sảnh đón',
-    },
-    {
-        src: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200&q=85',
-        label: 'Khu tiện ích',
+        label: 'Ảnh mặc định',
     },
 ];
+
+const galleryImages = computed<GalleryImage[]>(() => {
+    const images = props.post?.images
+        ?.filter((item) => !!item)
+        .map((src, index) => ({
+            src,
+            label: `Hình ${index + 1}`,
+        }));
+
+    return images && images.length ? images : fallbackImages;
+});
+
+const postTitle = computed(() => props.post?.title || 'Tin đăng bất động sản');
+const listingType = computed(() => props.post?.listing_type || 'Bất động sản');
+const categoryName = computed(() => props.post?.category_name || 'Chi tiết tin đăng');
+const postAddress = computed(() => props.post?.address || 'Đang cập nhật địa chỉ');
+const postDescription = computed(() => props.post?.description || 'Đang cập nhật mô tả.');
+const postCode = computed(() => props.post?.id || 0);
+const sellerName = computed(() => props.post?.seller_name || 'Chính chủ');
+const sellerPostCount = computed(() => props.post?.seller_post_count || 0);
+const sellerAvatar = computed(() => {
+    const avatar = props.post?.seller_avatar?.trim();
+    if (avatar) {
+        return avatar;
+    }
+
+    const encodedName = encodeURIComponent(sellerName.value || 'User');
+    return `https://ui-avatars.com/api/?name=${encodedName}&background=F97316&color=fff&size=128`;
+});
+
+const breadcrumbListingHref = computed(() => {
+    const type = (props.post?.listing_type || '').toLowerCase();
+
+    if (type.includes('thuê')) {
+        return '/post-rent';
+    }
+
+    if (type.includes('bán') || type.includes('ban')) {
+        return '/post-sell';
+    }
+
+    return '/';
+});
+
+const breadcrumbCategoryHref = computed(() => breadcrumbListingHref.value);
+
+const formattedPrice = computed(() => {
+    const amount = Number(props.post?.price || 0);
+    return new Intl.NumberFormat('vi-VN').format(amount);
+});
+
+const formattedArea = computed(() => {
+    const area = Number(props.post?.area || 0);
+    if (!area) {
+        return 'Đang cập nhật';
+    }
+
+    return `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 }).format(area)} m²`;
+});
+
+const pricePerSquareMeter = computed(() => {
+    const amount = Number(props.post?.price || 0);
+    const area = Number(props.post?.area || 0);
+
+    if (!amount || !area) {
+        return 'Đang cập nhật';
+    }
+
+    const value = Math.round(amount / area);
+    return `~${new Intl.NumberFormat('vi-VN').format(value)} đ/m²`;
+});
+
+const displayPhone = computed(() => {
+    const raw = (props.post?.seller_phone || '').replace(/\D/g, '');
+    if (raw.length < 9) {
+        return 'Đang cập nhật';
+    }
+
+    if (raw.length === 10) {
+        return `${raw.slice(0, 4)} ${raw.slice(4, 7)} ${raw.slice(7)}`;
+    }
+
+    if (raw.length === 11) {
+        return `${raw.slice(0, 4)} ${raw.slice(4, 7)} ${raw.slice(7)}`;
+    }
+
+    return raw;
+});
+
+const callablePhone = computed(() => {
+    const raw = (props.post?.seller_phone || '').replace(/\D/g, '');
+    return raw.length >= 9 ? `tel:${raw}` : '#';
+});
+
+const hasCallablePhone = computed(() => callablePhone.value !== '#');
+
+const zaloLink = computed(() => {
+    const raw = (props.post?.seller_phone || '').replace(/\D/g, '');
+    if (raw.length < 9) {
+        return '#';
+    }
+
+    if (raw.startsWith('0')) {
+        return `https://zalo.me/${raw}`;
+    }
+
+    return `https://zalo.me/${raw}`;
+});
+
+const hasZaloLink = computed(() => zaloLink.value !== '#');
+
+const GOONG_MAP_KEY = 'NDYPjCSusn6YSEozAla1mgcP7pTXoFU3tIamrb9M';
+const DEFAULT_LOCATION = { lat: 16.047079, lng: 108.20623 };
+
+const mapContainerRef = ref<HTMLDivElement | null>(null);
+const mapRef = ref<any>(null);
+const markerRef = ref<any>(null);
+
+const postedDate = computed(() => {
+    if (!props.post?.created_at) {
+        return 'Đang cập nhật';
+    }
+
+    return new Intl.DateTimeFormat('vi-VN').format(new Date(props.post.created_at));
+});
+
+const expiryDate = computed(() => {
+    if (!props.post?.expires_at) {
+        return 'Đang cập nhật';
+    }
+
+    return new Intl.DateTimeFormat('vi-VN').format(new Date(props.post.expires_at));
+});
 
 let current = 0;
 let mainSlide: HTMLImageElement | null = null;
 let counter: HTMLElement | null = null;
 let dotContainer: HTMLElement | null = null;
 let thumbStrip: HTMLElement | null = null;
+
+function parseLocation(value: string) {
+    const [latRaw, lngRaw] = (value || '')
+        .split(',')
+        .map((item) => item.trim());
+    const lat = Number(latRaw);
+    const lng = Number(lngRaw);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return null;
+    }
+
+    return { lat, lng };
+}
+
+function ensureMapLibreAssets() {
+    return new Promise<void>((resolve, reject) => {
+        if (window.maplibregl) {
+            resolve();
+            return;
+        }
+
+        const cssId = 'maplibre-css';
+        if (!document.getElementById(cssId)) {
+            const link = document.createElement('link');
+            link.id = cssId;
+            link.rel = 'stylesheet';
+            link.href = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';
+            document.head.appendChild(link);
+        }
+
+        const scriptId = 'maplibre-script';
+        const existingScript = document.getElementById(scriptId) as HTMLScriptElement | null;
+
+        if (existingScript) {
+            const checkLoaded = () => {
+                if (window.maplibregl) {
+                    resolve();
+                } else {
+                    setTimeout(checkLoaded, 50);
+                }
+            };
+            checkLoaded();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Khong the tai MapLibre'));
+        document.body.appendChild(script);
+    });
+}
+
+function upsertMarker(lat: number, lng: number) {
+    if (!window.maplibregl || !mapRef.value) {
+        return;
+    }
+
+    if (!markerRef.value) {
+        markerRef.value = new window.maplibregl.Marker({
+            color: '#ef4444',
+            draggable: false,
+        })
+            .setLngLat([lng, lat])
+            .addTo(mapRef.value);
+    } else {
+        markerRef.value.setLngLat([lng, lat]);
+    }
+}
+
+async function initMap() {
+    await ensureMapLibreAssets();
+    await nextTick();
+
+    if (!mapContainerRef.value || !window.maplibregl || mapRef.value) {
+        return;
+    }
+
+    const location = parseLocation(props.post?.location || '') || DEFAULT_LOCATION;
+
+    mapRef.value = new window.maplibregl.Map({
+        container: mapContainerRef.value,
+        style: `https://tiles.goong.io/assets/goong_map_web.json?api_key=${GOONG_MAP_KEY}`,
+        center: [location.lng, location.lat],
+        zoom: 14,
+    });
+
+    mapRef.value.on('load', () => {
+        upsertMarker(location.lat, location.lng);
+    });
+}
 
 function goTo(idx: number) {
     if (!mainSlide || !counter) {
@@ -70,12 +309,13 @@ function goTo(idx: number) {
         ?.classList.remove('thumb-active');
     document.getElementById(`dot-${current}`)?.classList.remove('bg-white');
     document.getElementById(`dot-${current}`)?.classList.add('bg-white/50');
-    current = (idx + images.length) % images.length;
+    const totalImages = galleryImages.value.length;
+    current = (idx + totalImages) % totalImages;
     mainSlide.classList.remove('slide-active');
     void mainSlide.offsetWidth; // reflow
-    mainSlide.src = images[current].src;
+    mainSlide.src = galleryImages.value[current].src;
     mainSlide.classList.add('slide-active');
-    counter.textContent = `${current + 1} / ${images.length}`;
+    counter.textContent = `${current + 1} / ${totalImages}`;
     const activeThumb = document.getElementById(`thumb-${current}`);
     activeThumb?.classList.add('thumb-active');
     activeThumb?.scrollIntoView({
@@ -113,7 +353,9 @@ function initGallery() {
     mountedDotContainer.innerHTML = '';
 
     // Build thumbnails and dots after DOM is mounted.
-    images.forEach((img, i) => {
+    current = 0;
+
+    galleryImages.value.forEach((img, i) => {
         const btn = document.createElement('button');
         btn.className =
             'flex-shrink-0 rounded-lg overflow-hidden focus:outline-none transition';
@@ -137,11 +379,19 @@ function initGallery() {
 
 onMounted(() => {
     initGallery();
+    initMap();
     document.addEventListener('keydown', handleKeydown);
 });
 
 onUnmounted(() => {
     document.removeEventListener('keydown', handleKeydown);
+
+    if (mapRef.value) {
+        mapRef.value.remove();
+        mapRef.value = null;
+    }
+
+    markerRef.value = null;
 });
 </script>
 
@@ -153,15 +403,11 @@ onUnmounted(() => {
                 <nav
                     class="mb-4 flex flex-wrap items-center text-xs text-gray-500"
                 >
-                    <a href="#" class="hover:text-brand">Bán</a>
+                    <a :href="breadcrumbListingHref" class="hover:text-brand">{{ listingType }}</a>
                     <span class="breadcrumb-sep"></span>
-                    <a href="#" class="hover:text-brand">Căn hộ chung cư</a>
+                    <a :href="breadcrumbCategoryHref" class="hover:text-brand">{{ categoryName }}</a>
                     <span class="breadcrumb-sep"></span>
-                    <a href="#" class="hover:text-brand">Fiato Uptown</a>
-                    <span class="breadcrumb-sep"></span>
-                    <span class="font-medium text-gray-700"
-                        >Penthouse thông 2 tầng có bơi riêng</span
-                    >
+                    <span class="font-medium text-gray-700">{{ postTitle }}</span>
                 </nav>
 
                 <div class="flex gap-6">
@@ -171,14 +417,13 @@ onUnmounted(() => {
                         <h1
                             class="text-navy mb-1 text-xl leading-snug font-bold md:text-2xl"
                         >
-                            Penthouse thông 2 tầng có hồ bơi riêng, có suất đỗ ô
-                            tô miễn phí dự án Fiato Uptown Thủ Đức
+                            {{ postTitle }}
                         </h1>
                         <div
                             class="mb-4 flex items-center gap-2 text-sm text-gray-500"
                         >
                             <svg
-                                class="text-brand h-4 w-4 flex-shrink-0"
+                                class="text-brand h-4 w-4 shrink-0"
                                 fill="currentColor"
                                 viewBox="0 0 20 20"
                             >
@@ -188,10 +433,7 @@ onUnmounted(() => {
                                     clip-rule="evenodd"
                                 />
                             </svg>
-                            <span
-                                >95 Nguyễn Văn Tăng, Phường Tăm Phú, Thành phố
-                                Thủ Đức, Hồ Chí Minh</span
-                            >
+                            <span>{{ postAddress }}</span>
                         </div>
 
                         <!-- GALLERY SLIDESHOW -->
@@ -203,7 +445,7 @@ onUnmounted(() => {
                             >
                                 <img
                                     id="mainSlide"
-                                    src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=85"
+                                    :src="galleryImages[0]?.src"
                                     alt="Ảnh chính"
                                     class="slide-active h-full w-full object-cover"
                                 />
@@ -302,33 +544,25 @@ onUnmounted(() => {
                         >
                             <div>
                                 <div class="text-brand text-2xl font-black">
-                                    50 tỷ<span
+                                    {{ formattedPrice }}<span
                                         class="ml-1 text-sm font-semibold text-gray-500"
                                         >VNĐ</span
                                     >
                                 </div>
                                 <div class="text-xs text-gray-400">
-                                    ~161 tr/m²
+                                    {{ pricePerSquareMeter }}
                                 </div>
                             </div>
                             <div class="h-10 w-px bg-gray-200"></div>
                             <div>
                                 <div class="text-lg font-bold text-gray-700">
-                                    310 m²
+                                    {{ formattedArea }}
                                 </div>
                                 <div class="text-xs text-gray-400">
                                     Diện tích
                                 </div>
                             </div>
                             <div class="h-10 w-px bg-gray-200"></div>
-                            <div>
-                                <div class="text-lg font-bold text-gray-700">
-                                    4
-                                </div>
-                                <div class="text-xs text-gray-400">
-                                    Phòng ngủ
-                                </div>
-                            </div>
                             <div class="ml-auto flex gap-2">
                                 <button
                                     class="hover:border-brand hover:text-brand rounded-lg border border-gray-200 p-2 transition"
@@ -363,21 +597,7 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <!-- PRICE ALERT BANNER -->
-                        <div
-                            class="mb-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm"
-                        >
-                            <span class="text-lg text-green-600">📊</span>
-                            <span class="text-green-700"
-                                ><b>53% căn hộ</b> tại đây đang rao bán trong
-                                tầm giá này trong 1 năm qua</span
-                            >
-                            <a
-                                href="#"
-                                class="ml-auto text-xs font-semibold whitespace-nowrap text-green-700 hover:underline"
-                                >Xem lịch sử giá ›</a
-                            >
-                        </div>
+
 
                         <!-- MÔ TẢ -->
                         <section
@@ -388,174 +608,9 @@ onUnmounted(() => {
                             </h2>
                             <div
                                 class="space-y-2 text-sm leading-relaxed text-gray-700"
-                            >
-                                <p>
-                                    Penthouse thông tầng có hồ bơi tại TP Thủ
-                                    Đức trong khu compound Hưng Phú, tỉnh lộ
-                                    Dương Hàng Bàng.
-                                </p>
-                                <p>
-                                    ✓ Có hồ bơi riêng &nbsp; ✓ Diện tích sân
-                                    vườn: 81m² &nbsp; ✓ Chỗ đỗ xe ô tô miễn phí
-                                </p>
-                                <p>
-                                    Ngân hàng hỗ trợ vay tối đa <b>70%</b>, lãi
-                                    suất ưu đãi <b>0%</b> trong 24 tháng –
-                                    Vietcombank &amp; AB Bank.
-                                </p>
-                                <p>
-                                    Hỗ trợ 3D/CG (25%, không giới hạn) –
-                                    Eximbank.
-                                </p>
-                                <div class="mt-2">
-                                    <p>
-                                        <b>Vị trí:</b> Số 2 Thái Sơn 13, Nguyễn
-                                        Oanh Bắc 2, cổ ng chuyển đổi sân bay Tân
-                                        Sơn Nhất 45'.
-                                    </p>
-                                    <p class="mt-1">
-                                        Tiện ích xung quanh: hồ bơi CLB, Sky
-                                        Garden tầng thượng, gần Landmark 81.
-                                        Công viên nội khu, cây xanh, Gym &amp;
-                                        Yoga, phòng chức năng.
-                                    </p>
-                                </div>
-                            </div>
+                                v-html="postDescription"
+                            ></div>
                         </section>
-
-                        <!-- ĐẶC ĐIỂM BẤT ĐỘNG SẢN -->
-                        <section
-                            class="mb-5 rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
-                        >
-                            <h2 class="text-navy mb-4 text-base font-bold">
-                                Đặc điểm bất động sản
-                            </h2>
-                            <div
-                                class="grid grid-cols-2 gap-4 text-sm md:grid-cols-3"
-                            >
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="text-brand flex h-9 w-9 items-center justify-center rounded-lg bg-red-50"
-                                    >
-                                        💰
-                                    </div>
-                                    <div>
-                                        <div class="text-xs text-gray-400">
-                                            Khoảng giá
-                                        </div>
-                                        <div class="font-semibold">
-                                            50 tỷ/m²
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50"
-                                    >
-                                        🏊
-                                    </div>
-                                    <div>
-                                        <div class="text-xs text-gray-400">
-                                            Số phòng tắm &amp; vệ sinh
-                                        </div>
-                                        <div class="font-semibold">3 phòng</div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-50"
-                                    >
-                                        📐
-                                    </div>
-                                    <div>
-                                        <div class="text-xs text-gray-400">
-                                            Diện tích
-                                        </div>
-                                        <div class="font-semibold">310 m²</div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50"
-                                    >
-                                        🧭
-                                    </div>
-                                    <div>
-                                        <div class="text-xs text-gray-400">
-                                            Hướng nhà
-                                        </div>
-                                        <div class="font-semibold">
-                                            Đông – Nam
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="flex h-9 w-9 items-center justify-center rounded-lg bg-green-50"
-                                    >
-                                        🛏
-                                    </div>
-                                    <div>
-                                        <div class="text-xs text-gray-400">
-                                            Số phòng ngủ
-                                        </div>
-                                        <div class="font-semibold">4 phòng</div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50"
-                                    >
-                                        🏢
-                                    </div>
-                                    <div>
-                                        <div class="text-xs text-gray-400">
-                                            Nội thất
-                                        </div>
-                                        <div class="font-semibold">Đầy đủ</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- DỰ ÁN -->
-                        <section
-                            class="mb-5 rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
-                        >
-                            <div class="mb-3 flex items-center justify-between">
-                                <h2 class="text-navy text-base font-bold">
-                                    Thông tin dự án
-                                </h2>
-                                <a
-                                    href="#"
-                                    class="text-brand text-xs font-semibold hover:underline"
-                                    >Xem tất cả đăng bán ›</a
-                                >
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <img
-                                    src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=120&q=80"
-                                    alt="Fiato Uptown"
-                                    class="h-16 w-20 flex-shrink-0 rounded-lg object-cover"
-                                />
-                                <div class="text-sm">
-                                    <div class="text-navy text-base font-bold">
-                                        Fiato Uptown
-                                    </div>
-                                    <div
-                                        class="mt-1 flex items-center gap-4 text-xs text-gray-500"
-                                    >
-                                        <span>🏗 72.097 m²</span>
-                                        <span>🏠 464 căn</span>
-                                        <span>🏢 8 tầng</span>
-                                    </div>
-                                    <div class="mt-1 text-xs text-gray-400">
-                                        Công ty phân hưng Phú Inversit
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
                         <!-- BẢN ĐỒ -->
                         <section
                             class="mb-5 rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
@@ -564,40 +619,37 @@ onUnmounted(() => {
                                 Xem trên bản đồ
                             </h2>
                             <div
-                                class="flex h-48 items-center justify-center overflow-hidden rounded-xl border border-blue-100 bg-blue-50"
+                                class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
                             >
-                                <div class="text-center text-gray-400">
-                                    <div class="mb-2 text-4xl">🗺</div>
-                                    <p class="text-sm">
-                                        95 Nguyễn Văn Tăng, Phường Tăm Phú, TP.
-                                        Thủ Đức
-                                    </p>
+                                <div class="h-72 w-full bg-slate-100 sm:h-80 lg:h-96">
+                                    <div ref="mapContainerRef" class="h-full w-full"></div>
                                 </div>
                             </div>
+                            <p class="mt-2 text-xs text-slate-500">Tọa độ: {{ props.post?.location || 'Đang cập nhật' }}</p>
                             <div
                                 class="mt-3 grid grid-cols-4 gap-3 text-xs text-gray-600"
                             >
                                 <div class="text-center">
                                     <div class="font-semibold text-gray-800">
-                                        10/03/2026
+                                        {{ postedDate }}
                                     </div>
                                     <div class="text-gray-400">Ngày đăng</div>
                                 </div>
                                 <div class="text-center">
                                     <div class="font-semibold text-gray-800">
-                                        14/04/2026
+                                        {{ expiryDate }}
                                     </div>
                                     <div class="text-gray-400">Hết hạn</div>
                                 </div>
                                 <div class="text-center">
                                     <div class="font-semibold text-gray-800">
-                                        Tin thường
+                                        {{ listingType }}
                                     </div>
                                     <div class="text-gray-400">Loại tin</div>
                                 </div>
                                 <div class="text-center">
                                     <div class="font-semibold text-gray-800">
-                                        43187931
+                                        {{ postCode }}
                                     </div>
                                     <div class="text-gray-400">Mã tin</div>
                                 </div>
@@ -612,36 +664,31 @@ onUnmounted(() => {
                             <div
                                 class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3"
                             >
-                                <!-- card 1 -->
-                                <div
-                                    class="group cursor-pointer overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md"
+                                <a
+                                    v-for="item in relatedPosts"
+                                    :key="item.id"
+                                    :href="`/post-detail/${item.id}`"
+                                    class="group block cursor-pointer overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md"
                                 >
                                     <div class="relative overflow-hidden">
                                         <img
-                                            src="https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=400&q=80"
+                                            :src="item.img || 'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=400&q=80'"
                                             alt=""
                                             class="h-36 w-full object-cover transition duration-300 group-hover:scale-105"
                                         />
                                         <span
                                             class="tag absolute top-2 left-2 bg-red-100 text-red-600"
-                                            >Bán</span
+                                            >{{ listingType }}</span
                                         >
                                     </div>
                                     <div class="p-3">
-                                        <div
-                                            class="text-brand text-sm font-bold"
-                                        >
-                                            6.8 tỷ
+                                        <div class="text-brand text-sm font-bold">
+                                            {{ new Intl.NumberFormat('vi-VN').format(Number(item.price || 0)) }} đ
                                         </div>
-                                        <p
-                                            class="mt-0.5 line-clamp-2 text-xs leading-snug text-gray-700"
-                                        >
-                                            Căn rộng không số có đầy đủ nội
-                                            thất...
+                                        <p class="mt-0.5 line-clamp-2 text-xs leading-snug text-gray-700">
+                                            {{ item.title }}
                                         </p>
-                                        <div
-                                            class="mt-1 flex items-center gap-1 text-xs text-gray-400"
-                                        >
+                                        <div class="mt-1 flex items-center gap-1 text-xs text-gray-400">
                                             <svg
                                                 class="h-3 w-3"
                                                 fill="currentColor"
@@ -653,40 +700,45 @@ onUnmounted(() => {
                                                     clip-rule="evenodd"
                                                 />
                                             </svg>
-                                            TP Thủ Đức
+                                            {{ item.address }}
                                         </div>
                                     </div>
-                                </div>
-                                <!-- card 2 -->
-                                <div
-                                    class="group cursor-pointer overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md"
+                                </a>
+                            </div>
+                        </section>
+
+                        <section class="mb-5">
+                            <h2 class="text-navy mb-3 text-base font-bold">
+                                Bất động sản nổi bật
+                            </h2>
+                            <div
+                                class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3"
+                            >
+                                <a
+                                    v-for="item in featuredPosts"
+                                    :key="item.id"
+                                    :href="`/post-detail/${item.id}`"
+                                    class="group block cursor-pointer overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md"
                                 >
                                     <div class="relative overflow-hidden">
                                         <img
-                                            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80"
+                                            :src="item.img || 'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=400&q=80'"
                                             alt=""
                                             class="h-36 w-full object-cover transition duration-300 group-hover:scale-105"
                                         />
                                         <span
-                                            class="tag absolute top-2 left-2 bg-red-100 text-red-600"
-                                            >Bán</span
+                                            class="tag absolute top-2 left-2 bg-orange-100 text-orange-700"
+                                            >VIP/SVIP</span
                                         >
                                     </div>
                                     <div class="p-3">
-                                        <div
-                                            class="text-brand text-sm font-bold"
-                                        >
-                                            6.5 tỷ
+                                        <div class="text-brand text-sm font-bold">
+                                            {{ new Intl.NumberFormat('vi-VN').format(Number(item.price || 0)) }} đ
                                         </div>
-                                        <p
-                                            class="mt-0.5 line-clamp-2 text-xs leading-snug text-gray-700"
-                                        >
-                                            Bán Duplex căn hộ Fiato Uptown diện
-                                            tích...
+                                        <p class="mt-0.5 line-clamp-2 text-xs leading-snug text-gray-700">
+                                            {{ item.title }}
                                         </p>
-                                        <div
-                                            class="mt-1 flex items-center gap-1 text-xs text-gray-400"
-                                        >
+                                        <div class="mt-1 flex items-center gap-1 text-xs text-gray-400">
                                             <svg
                                                 class="h-3 w-3"
                                                 fill="currentColor"
@@ -698,60 +750,16 @@ onUnmounted(() => {
                                                     clip-rule="evenodd"
                                                 />
                                             </svg>
-                                            TP Thủ Đức
+                                            {{ item.address }}
                                         </div>
                                     </div>
-                                </div>
-                                <!-- card 3 -->
-                                <div
-                                    class="group cursor-pointer overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md"
-                                >
-                                    <div class="relative overflow-hidden">
-                                        <img
-                                            src="https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=400&q=80"
-                                            alt=""
-                                            class="h-36 w-full object-cover transition duration-300 group-hover:scale-105"
-                                        />
-                                        <span
-                                            class="tag absolute top-2 left-2 bg-orange-100 text-orange-600"
-                                            >Hot</span
-                                        >
-                                    </div>
-                                    <div class="p-3">
-                                        <div
-                                            class="text-brand text-sm font-bold"
-                                        >
-                                            4.9 tỷ
-                                        </div>
-                                        <p
-                                            class="mt-0.5 line-clamp-2 text-xs leading-snug text-gray-700"
-                                        >
-                                            Cập nhật giá Fiato Uptown 6/980...
-                                        </p>
-                                        <div
-                                            class="mt-1 flex items-center gap-1 text-xs text-gray-400"
-                                        >
-                                            <svg
-                                                class="h-3 w-3"
-                                                fill="currentColor"
-                                                viewBox="0 0 20 20"
-                                            >
-                                                <path
-                                                    fill-rule="evenodd"
-                                                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9z"
-                                                    clip-rule="evenodd"
-                                                />
-                                            </svg>
-                                            TP Thủ Đức
-                                        </div>
-                                    </div>
-                                </div>
+                                </a>
                             </div>
                         </section>
                     </div>
 
                     <!-- RIGHT SIDEBAR -->
-                    <aside class="hidden w-80 flex-shrink-0 lg:block">
+                    <aside class="hidden w-80 shrink-0 lg:block">
                         <!-- AGENT CARD -->
                         <div
                             class="sticky top-20 mb-4 rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
@@ -759,7 +767,7 @@ onUnmounted(() => {
                             <div class="mb-4 flex items-center gap-3">
                                 <div class="relative">
                                     <img
-                                        src="https://i.pravatar.cc/56?img=47"
+                                        :src="sellerAvatar"
                                         alt="Agent"
                                         class="ring-brand/20 h-14 w-14 rounded-full object-cover ring-2"
                                     />
@@ -769,7 +777,7 @@ onUnmounted(() => {
                                 </div>
                                 <div>
                                     <div class="text-navy text-sm font-bold">
-                                        Nguyễn Phan Trinh
+                                        {{ sellerName }}
                                     </div>
                                     <div class="mt-0.5 text-xs text-gray-400">
                                         Chuyên nghiệp
@@ -777,13 +785,14 @@ onUnmounted(() => {
                                     <div
                                         class="mt-1 flex items-center gap-3 text-xs text-gray-500"
                                     >
-                                        <span>⭐ 8 năm</span>
-                                        <span>📋 11 tin đăng</span>
+                                        <span>📋 {{ sellerPostCount }} tin đăng</span>
                                     </div>
                                 </div>
                             </div>
-                            <button
+                            <a
+                                :href="callablePhone"
                                 class="bg-brand hover:bg-brand-dark mb-2 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition"
+                                :class="{ 'pointer-events-none opacity-60': !hasCallablePhone }"
                             >
                                 <svg
                                     class="h-4 w-4"
@@ -794,25 +803,24 @@ onUnmounted(() => {
                                         d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"
                                     />
                                 </svg>
-                                0912 572 *** – Hiện số
-                            </button>
-                            <button
+                                Gọi {{ displayPhone }}
+                            </a>
+                            <a
+                                :href="zaloLink"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 class="flex w-full items-center justify-center gap-2 rounded-xl bg-green-500 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600"
+                                :class="{ 'pointer-events-none opacity-60': !hasZaloLink }"
                             >
-                                <svg
-                                    class="h-4 w-4"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.174-.3-.019-.465.13-.615.136-.135.301-.345.451-.523.146-.181.194-.301.297-.496.1-.21.049-.375-.025-.524-.075-.15-.672-1.62-.922-2.206-.24-.584-.487-.51-.672-.51-.172-.015-.371-.015-.571-.015-.2 0-.523.074-.797.359-.273.3-1.045 1.02-1.045 2.475s1.07 2.865 1.219 3.075c.149.195 2.105 3.195 5.1 4.485.714.3 1.27.48 1.704.629.714.227 1.365.195 1.88.121.574-.091 1.767-.721 2.016-1.426.255-.705.255-1.29.18-1.425-.074-.135-.27-.21-.57-.345z"
+                                <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/15">
+                                    <img
+                                        src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg"
+                                        alt="Zalo"
+                                        class="h-4 w-4 object-contain"
                                     />
-                                    <path
-                                        d="M20.52 3.449C12.831-3.984.106 1.407.101 11.893c0 2.096.549 4.14 1.595 5.945L0 24l6.335-1.652a11.955 11.955 0 005.71 1.447h.005c7.987 0 14.09-6.49 14.09-14.036 0-3.756-1.461-7.277-4.12-9.31z"
-                                    />
-                                </svg>
+                                </span>
                                 Chat qua Zalo
-                            </button>
+                            </a>
                             <div class="mt-3 flex justify-center">
                                 <a
                                     href="#"
@@ -832,64 +840,14 @@ onUnmounted(() => {
                                 Bất động sản nổi bật
                             </div>
                             <ul class="space-y-1.5 text-xs text-gray-600">
-                                <li>
+                                <li v-for="item in featuredPosts.slice(0, 5)" :key="item.id">
                                     <a
-                                        href="#"
+                                        :href="`/post-detail/${item.id}`"
                                         class="hover:text-brand block py-0.5 transition"
-                                        >Nhà đất Thành Long Thọ</a
-                                    >
-                                </li>
-                                <li>
-                                    <a
-                                        href="#"
-                                        class="hover:text-brand block py-0.5 transition"
-                                        >Nhà mặt tiền sổ hồng chính chủ</a
-                                    >
-                                </li>
-                                <li>
-                                    <a
-                                        href="#"
-                                        class="hover:text-brand block py-0.5 transition"
-                                        >Bán đất Liên Thuận</a
-                                    >
-                                </li>
-                                <li>
-                                    <a
-                                        href="#"
-                                        class="hover:text-brand block py-0.5 transition"
-                                        >Nhà cần Đường đất</a
-                                    >
-                                </li>
-                                <li>
-                                    <a
-                                        href="#"
-                                        class="hover:text-brand block py-0.5 transition"
-                                        >Mua nhà tại Tân Bình</a
+                                        >{{ item.title }}</a
                                     >
                                 </li>
                             </ul>
-                        </div>
-
-                        <!-- MORTGAGE BANNER -->
-                        <div
-                            class="from-navy rounded-xl bg-gradient-to-br to-blue-700 p-4 text-white"
-                        >
-                            <div
-                                class="mb-1 text-xs font-bold tracking-wide uppercase opacity-70"
-                            >
-                                Tổng hợp
-                            </div>
-                            <div class="text-lg leading-tight font-black">
-                                Lãi suất vay<br />ưu đãi nhất 3.5%
-                            </div>
-                            <div class="mt-1 mb-3 text-xs opacity-70">
-                                phí trả trước thời hạn
-                            </div>
-                            <button
-                                class="text-navy w-full rounded-lg bg-white py-2 text-xs font-bold transition hover:bg-gray-100"
-                            >
-                                Tìm hiểu thêm
-                            </button>
                         </div>
                     </aside>
                 </div>
@@ -899,8 +857,10 @@ onUnmounted(() => {
             <div
                 class="fixed right-0 bottom-0 left-0 z-50 flex gap-2 border-t border-gray-200 bg-white p-3 shadow-lg lg:hidden"
             >
-                <button
+                <a
+                    :href="callablePhone"
                     class="bg-brand hover:bg-brand-dark flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition"
+                    :class="{ 'pointer-events-none opacity-60': !hasCallablePhone }"
                 >
                     <svg
                         class="h-4 w-4"
@@ -911,13 +871,24 @@ onUnmounted(() => {
                             d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"
                         />
                     </svg>
-                    Gọi ngay
-                </button>
-                <button
+                    Gọi {{ displayPhone }}
+                </a>
+                <a
+                    :href="zaloLink"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-500 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
+                    :class="{ 'pointer-events-none opacity-60': !hasZaloLink }"
                 >
+                    <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/15">
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg"
+                            alt="Zalo"
+                            class="h-4 w-4 object-contain"
+                        />
+                    </span>
                     Chat Zalo
-                </button>
+                </a>
             </div>
         </body>
     </ClientLayout>

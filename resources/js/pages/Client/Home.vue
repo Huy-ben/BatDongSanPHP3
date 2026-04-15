@@ -466,7 +466,7 @@ function getCategoryFilterUrl(categoryName) {
                             :key="post.id"
                             class="product-item group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-xl"
                         >
-                        <a href="/post-detail">
+                        <a :href="`/post-detail/${post.id}`">
                             <div class="relative h-48 overflow-hidden md:h-52">
                                 <img
                                     :src="post.img"
