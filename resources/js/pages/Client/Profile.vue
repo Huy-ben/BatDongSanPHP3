@@ -75,12 +75,49 @@ const packageTone = computed(() => {
     return 'bg-slate-100 text-slate-700 border-slate-200';
 });
 
+const packageAction = computed(() => {
+    const packageType = props.activePackage?.package_type;
+
+    if (packageType === '1') {
+        return {
+            label: 'Gia hạn gói',
+            href: '/thanh-toan?plan=vip&renew=1',
+        };
+    }
+
+    if (packageType === '2') {
+        return {
+            label: 'Gia hạn gói',
+            href: '/thanh-toan?plan=svip&renew=1',
+        };
+    }
+
+    return {
+        label: 'Mua gói',
+        href: '/package',
+    }
+});
+
 const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND',
         maximumFractionDigits: 0,
     }).format(price || 0);
+};
+
+const formatDate = (dateValue) => {
+    if (!dateValue) {
+        return 'Chưa cập nhật';
+    }
+
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+        return dateValue;
+    }
+
+    return new Intl.DateTimeFormat('vi-VN').format(date);
 };
 
 const openEditModal = () => {
@@ -211,7 +248,7 @@ const goToPage = (page) => {
                                     Tên gói: <span class="font-semibold text-slate-900">{{ props.activePackage?.package_name }}</span>
                                 </p>
                                 <p>
-                                    Hết hạn: <span class="font-semibold text-slate-900">{{ props.activePackage?.expiry_date }}</span>
+                                    Hết hạn: <span class="font-semibold text-slate-900">{{ formatDate(props.activePackage?.expiry_date) }}</span>
                                 </p>
                             </div>
 
@@ -220,10 +257,10 @@ const goToPage = (page) => {
                             </div>
 
                             <a
-                                href="/package"
+                                :href="packageAction.href"
                                 class="mt-5 inline-flex w-full items-center justify-center rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-xs font-bold tracking-[0.18em] text-orange-700 uppercase transition hover:bg-orange-100"
                             >
-                                Mua hoặc gia hạn gói
+                                {{ packageAction.label }}
                             </a>
                         </section>
                     </div>

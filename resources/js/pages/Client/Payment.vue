@@ -32,6 +32,7 @@ const plans = {
 const query = new URLSearchParams(window.location.search);
 const initialPlan = query.get('plan')?.toLowerCase();
 const selectedPlan = ref(plans[initialPlan] ? initialPlan : 'vip');
+const isRenewMode = query.get('renew') === '1';
 const paymentStatus = query.get('status');
 const paymentReason = query.get('reason');
 
@@ -41,13 +42,16 @@ const canPayWithVnpay = computed(() => ['vip', 'svip'].includes(selectedPlan.val
 
 const paymentForm = useForm({
     plan: selectedPlan.value,
+    renew: isRenewMode,
 });
 
 const paymentFeedback = computed(() => {
     if (paymentStatus === 'success') {
         return {
             type: 'success',
-            text: 'Thanh toán VNPay thành công. Gói của bạn đã được kích hoạt.',
+            text: isRenewMode
+                ? 'Thanh toán VNPay thành công. Gói hiện tại đã được gia hạn thêm 3 tháng.'
+                : 'Thanh toán VNPay thành công. Gói của bạn đã được kích hoạt.',
         };
     }
 
@@ -58,6 +62,7 @@ const paymentFeedback = computed(() => {
             amount: 'Số tiền giao dịch không khớp.',
             session: 'Phiên thanh toán đã hết hạn. Vui lòng thử lại.',
             save: 'Thanh toán thành công nhưng chưa kích hoạt được gói. Vui lòng liên hệ hỗ trợ.',
+            renew_invalid: 'Không thể gia hạn vì gói hiện tại không hợp lệ hoặc đã hết hạn.',
             config: 'Cấu hình VNPay chưa đầy đủ.',
             plan: 'Gói thanh toán không hợp lệ.',
         };
@@ -77,6 +82,7 @@ function handlePayWithVnpay() {
     }
 
     paymentForm.plan = selectedPlan.value;
+    paymentForm.renew = isRenewMode;
     paymentForm.post('/payment/vnpay');
 }
 
@@ -92,6 +98,9 @@ const formatCurrency = (value) => new Intl.NumberFormat('vi-VN').format(value) +
                     <h1 class="mt-3 text-3xl font-black text-slate-950 sm:text-4xl">Hoàn tất thanh toán trong 2 bước</h1>
                     <p class="mt-3 max-w-3xl text-sm text-slate-600 sm:text-base">
                         Chọn đúng gói phù hợp nhu cầu và thanh toán qua VNPay. Hệ thống sẽ kích hoạt ngay sau khi giao dịch thành công.
+                    </p>
+                    <p v-if="isRenewMode" class="mt-3 inline-flex rounded-full border border-orange-200 bg-white px-4 py-1 text-xs font-semibold text-orange-700">
+                        Chế độ gia hạn: thanh toán sẽ cộng thêm 3 tháng cho gói hiện tại.
                     </p>
                 </div>
             </section>
@@ -127,7 +136,8 @@ const formatCurrency = (value) => new Intl.NumberFormat('vi-VN').format(value) +
                                         ? 'border-orange-400 bg-orange-50 shadow-sm'
                                         : 'border-slate-200 bg-white hover:border-orange-200',
                                 ]"
-                                @click="selectedPlan = plan.key"
+                                :disabled="isRenewMode"
+                                @click="!isRenewMode && (selectedPlan = plan.key)"
                             >
                                 <p class="text-xs font-bold tracking-[0.15em] text-slate-500 uppercase">{{ plan.duration }}</p>
                                 <h3 class="mt-1 text-xl font-extrabold text-slate-900">{{ plan.name }}</h3>

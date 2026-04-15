@@ -3,6 +3,13 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
+const props = defineProps({
+    hasUsedTrial: {
+        type: Boolean,
+        default: false,
+    },
+});
+
 const openFaqIndexes = ref([]);
 const showTrialModal = ref(false);
 const trialForm = useForm({});
@@ -40,6 +47,10 @@ const toggleFaq = (index) => {
 const isFaqOpen = (index) => openFaqIndexes.value.includes(index);
 
 const openTrialModal = () => {
+    if (props.hasUsedTrial) {
+        return;
+    }
+
     showTrialModal.value = true;
 };
 
@@ -261,12 +272,19 @@ const confirmActivateTrial = () => {
                         </div>
                         <div class="px-6 pb-6">
                             <button
+                                v-if="!props.hasUsedTrial"
                                 type="button"
                                 class="block w-full rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-bold text-slate-700 transition hover:bg-slate-50"
                                 @click="openTrialModal"
                             >
                                 Dùng miễn phí
                             </button>
+                            <div
+                                v-else
+                                class="rounded-xl border border-dashed border-amber-300 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-700"
+                            >
+                                Bạn đã sử dụng gói trial rồi
+                            </div>
                         </div>
                     </article>
 

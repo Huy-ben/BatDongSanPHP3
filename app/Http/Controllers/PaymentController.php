@@ -6,6 +6,7 @@ use App\Models\ListingPackage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
@@ -39,7 +40,10 @@ class PaymentController extends Controller
     {
         $validated = $request->validate([
             'plan' => ['required', 'in:vip,svip'],
+            'renew' => ['nullable', 'boolean'],
         ]);
+
+        $isRenew = (bool) ($validated['renew'] ?? false);
 
         $tmnCode = config('services.vnpay.tmn_code');
         $hashSecret = config('services.vnpay.hash_secret');
@@ -50,6 +54,25 @@ class PaymentController extends Controller
         }
 
         $package = self::PACKAGE_MAP[$validated['plan']];
+
+        if ($isRenew) {
+            $renewablePackage = ListingPackage::query()
+                ->where('user_id', $request->user()->id)
+                ->where('status', '1')
+                ->where('package_type', $package['type'])
+                ->whereDate('expiry_date', '>=', now()->toDateString())
+                ->orderByDesc('expiry_date')
+                ->first();
+
+            if (! $renewablePackage) {
+                return $this->redirectWithResult($request, [
+                    'status' => 'failed',
+                    'reason' => 'renew_invalid',
+                    'plan' => $validated['plan'],
+                ]);
+            }
+        }
+
         $txnRef = now()->format('YmdHis').$request->user()->id.random_int(1000, 9999);
 
         $vnpData = [
@@ -81,6 +104,7 @@ class PaymentController extends Controller
             'user_id' => $request->user()->id,
             'plan' => $validated['plan'],
             'amount' => $package['price'],
+            'renew' => $isRenew,
         ]);
 
         $paymentUrl = $vnpUrl.'?'.http_build_query($vnpData);
@@ -203,16 +227,53 @@ class PaymentController extends Controller
         }
 
         try {
-            ListingPackage::create([
-                'user_id' => $pending['user_id'],
-                'description' => 'Goi '.$package['name'].' thanh toan qua VNPay. Ma GD: '.$txnRef,
-                'price' => $package['price'],
-                'expiry_date' => now()->addMonthsNoOverflow($package['months'])->toDateString(),
-                'package_type' => $package['type'],
-                'package_name' => $package['name'],
-                'status' => '1',
-                'is_featured' => true,
-            ]);
+            if (! empty($pending['renew'])) {
+                $renewablePackage = ListingPackage::query()
+                    ->where('user_id', $pending['user_id'])
+                    ->where('status', '1')
+                    ->where('package_type', $package['type'])
+                    ->whereDate('expiry_date', '>=', now()->toDateString())
+                    ->orderByDesc('expiry_date')
+                    ->first();
+
+                if (! $renewablePackage) {
+                    $request->session()->forget($pendingKey);
+
+                    return $this->redirectWithResult($request, [
+                        'status' => 'failed',
+                        'reason' => 'renew_invalid',
+                        'plan' => $pending['plan'],
+                        'txnRef' => $txnRef,
+                    ]);
+                }
+
+                $expiryDate = $renewablePackage->expiry_date
+                    ? Carbon::parse((string) $renewablePackage->expiry_date)
+                    : null;
+
+                $baseExpiry = $expiryDate && $expiryDate->isFuture()
+                    ? $expiryDate
+                    : now();
+
+                $renewablePackage->update([
+                    'description' => 'Gia han goi '.$package['name'].' qua VNPay. Ma GD: '.$txnRef,
+                    'price' => $package['price'],
+                    'expiry_date' => $baseExpiry->copy()->addMonthsNoOverflow($package['months'])->toDateString(),
+                    'status' => '1',
+                    'is_featured' => true,
+                ]);
+            } else {
+                ListingPackage::create([
+                    'user_id' => $pending['user_id'],
+                    'description' => 'Goi '.$package['name'].' thanh toan qua VNPay. Ma GD: '.$txnRef,
+                    'price' => $package['price'],
+                    'expiry_date' => now()->addMonthsNoOverflow($package['months'])->toDateString(),
+                    'package_type' => $package['type'],
+                    'package_name' => $package['name'],
+                    'status' => '1',
+                    'is_featured' => true,
+                ]);
+            }
         } catch (\Throwable $exception) {
             Log::error('VNPay callback save package failed', [
                 'message' => $exception->getMessage(),

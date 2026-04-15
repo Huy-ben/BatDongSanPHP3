@@ -41,6 +41,7 @@ const failureMessage = computed(() => {
         amount: 'Số tiền thanh toán không khớp.',
         session: 'Phiên thanh toán đã hết hạn. Vui lòng thanh toán lại.',
         save: 'Thanh toán thành công nhưng hệ thống chưa kích hoạt được gói. Vui lòng liên hệ hỗ trợ.',
+        renew_invalid: 'Không thể gia hạn vì gói hiện tại không hợp lệ hoặc đã hết hạn.',
         config: 'Cấu hình thanh toán chưa hoàn chỉnh.',
         plan: 'Gói thanh toán không hợp lệ.',
     };

@@ -2,10 +2,11 @@
 
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Auth\GoogleLoginController;
+use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PaymentController;
 
 // Route::inertia('/', 'Welcome', [
 //     'canRegister' => Features::enabled(Features::registration()),
@@ -28,7 +29,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('dang-tin', [PostController::class, 'create'])->name('post-create');
     Route::post('dang-tin', [PostController::class, 'store'])->name('post-store');
 });
-Route::inertia('package', 'Client/Package')->name('package');
+Route::get('package', PackageController::class)->name('package');
 Route::inertia('thanh-toan', 'Client/Payment')->name('payment');
 Route::get('thanh-toan/ket-qua', [PaymentController::class, 'result'])->name('payment.result');
 Route::inertia('blog', 'Client/Blog')->name('blog');
