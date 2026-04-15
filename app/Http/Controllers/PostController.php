@@ -284,6 +284,8 @@ class PostController extends Controller
 
         $categories = Category::query()
             ->where('status', '1')
+            ->whereNotNull('parent_id')
+            ->whereNotNull('image')
             ->orderBy('category_name')
             ->get(['id', 'category_name']);
 

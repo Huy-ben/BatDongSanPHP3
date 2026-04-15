@@ -381,27 +381,6 @@ function getCategoryFilterUrl(categoryName) {
                                 </button>
                             </div>
                         </div>
-
-                        <div
-                            class="mt-4 flex flex-wrap gap-2 text-xs text-gray-600 md:mt-5"
-                        >
-                            <span
-                                class="rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-orange-700"
-                                >Quận 1</span
-                            >
-                            <span
-                                class="rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-orange-700"
-                                >Thủ Đức</span
-                            >
-                            <span
-                                class="rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-orange-700"
-                                >Biệt thự</span
-                            >
-                            <span
-                                class="rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-orange-700"
-                                >Dưới 5 tỷ</span
-                            >
-                        </div>
                     </div>
                 </div>
             </section>
