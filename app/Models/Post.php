@@ -59,6 +59,11 @@ class Post extends Model
         return $this->hasOne(Image::class, 'product_id')->where('is_thumbnail', true);
     }
 
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class, 'product_id');
+    }
+
     public function syncImages(array $imageUrls): void
     {
         $imageUrls = array_values(array_filter($imageUrls));

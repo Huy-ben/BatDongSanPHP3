@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import axios from 'axios';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import ClientLayout from '@/layouts/ClientLayout.vue';
 import { getBearerAuthHeaders } from '@/services/config';
 import { jam_read_num_forvietnamese } from '@/utils/money';
@@ -9,10 +9,18 @@ const posts = ref([]);
 const categories = ref([]);
 const blogs = ref([]);
 const allCategories = ref([]);
+const page = usePage();
+const isAuthenticated = computed(() => Boolean(page.props.auth?.user));
+
 onMounted(() => {
     fetchHomeData();
     fetchCategories();
+
+    if (isAuthenticated.value) {
+        fetchFavoriteIds();
+    }
 });
+
 const fetchHomeData = () => {
     axios.get('/api/home', {
         headers: getBearerAuthHeaders(),
@@ -65,6 +73,27 @@ const hotFavorites = ref(new Set());
 const sliderRef = ref(null);
 const visiblePostsCount = ref(4);
 const loadMoreClicks = ref(0);
+
+function syncFavoriteIds(next) {
+    projectFavorites.value = new Set(next);
+    hotFavorites.value = new Set(next);
+}
+
+async function fetchFavoriteIds() {
+    try {
+        const response = await axios.get('/favorites/ids');
+        const ids = Array.isArray(response.data?.ids)
+            ? response.data.ids
+                .map((id) => Number(id))
+                .filter((id) => Number.isInteger(id) && id > 0)
+            : [];
+
+        syncFavoriteIds(new Set(ids));
+    } catch (error) {
+        console.error('Error fetching favorite ids:', error);
+        syncFavoriteIds(new Set());
+    }
+}
 
 const filteredPostsByType = computed(() => {
     if (selectedPropertyType.value === DEFAULT_PROPERTY_TYPE) {
@@ -123,16 +152,50 @@ function slide(direction) {
     });
 }
 
-function toggleProjectFavorite(id) {
+async function toggleFavorite(id) {
+    if (!isAuthenticated.value) {
+        window.location.href = '/login';
+
+        return;
+    }
+
     const next = new Set(projectFavorites.value);
-    next.has(id) ? next.delete(id) : next.add(id);
-    projectFavorites.value = next;
+    const isLiked = next.has(id);
+
+    if (isLiked) {
+        next.delete(id);
+    } else {
+        next.add(id);
+    }
+
+    syncFavoriteIds(next);
+
+    try {
+        if (isLiked) {
+            await axios.delete(`/favorites/${id}`);
+        } else {
+            await axios.post('/favorites', { post_id: id });
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+        const rollback = new Set(projectFavorites.value);
+
+        if (isLiked) {
+            rollback.add(id);
+        } else {
+            rollback.delete(id);
+        }
+
+        syncFavoriteIds(rollback);
+    }
+}
+
+function toggleProjectFavorite(id) {
+    toggleFavorite(id);
 }
 
 function toggleHotFavorite(id) {
-    const next = new Set(hotFavorites.value);
-    next.has(id) ? next.delete(id) : next.add(id);
-    hotFavorites.value = next;
+    toggleFavorite(id);
 }
 
 function handleLoadMore() {

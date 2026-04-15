@@ -87,15 +87,15 @@ const handleLogout = async () => {
 
             <div class="hidden items-center gap-6 lg:flex">
 
-                <button
-                    type="button"
+                <Link
+                    href="/favorites"
                     class="rounded-full p-2 text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900"
                     aria-label="Yêu thích"
                 >
                     <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 20.5C11.8 20.5 11.6 20.4 11.4 20.2L4.7 13.8C3 12.1 3.1 9.4 4.9 7.8C6.6 6.3 9.2 6.5 10.6 8.1L12 9.7L13.4 8.1C14.8 6.5 17.4 6.3 19.1 7.8C20.9 9.4 21 12.1 19.3 13.8L12.6 20.2C12.4 20.4 12.2 20.5 12 20.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                </button>
+                </Link>
 
                 <button
                     type="button"
@@ -212,12 +212,12 @@ const handleLogout = async () => {
             </nav>
 
             <div class="mt-4 grid grid-cols-2 gap-2">
-                <button
-                    type="button"
+                <Link
+                    href="/favorites"
                     class="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-[#FF9C22] hover:text-[#B76300]"
                 >
                     Yêu thích
-                </button>
+                </Link>
                 <button
                     type="button"
                     class="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-[#FF9C22] hover:text-[#B76300]"

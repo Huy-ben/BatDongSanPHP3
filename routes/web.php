@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PostController;
@@ -39,6 +40,13 @@ Route::inertia('blog-detail', 'Client/BlogDetail')->name('blog-detail');
 Route::inertia('about-us', 'Client/AboutUs')->name('about-us');
 Route::get('contact', [ContactController::class, 'index'])->name('contact');
 Route::middleware(['auth'])->group(function () {
+    Route::inertia('favorites', 'Client/Favorites')->name('favorites');
+    Route::get('favorites/data', [FavoriteController::class, 'index'])->name('favorites.data');
+    Route::get('favorites/ids', [FavoriteController::class, 'ids'])->name('favorites.ids');
+    Route::post('favorites', [FavoriteController::class, 'store'])->name('favorites.store');
+    Route::delete('favorites/{post}', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
+    Route::delete('favorites', [FavoriteController::class, 'clear'])->name('favorites.clear');
+
     Route::get('profile', [ProfileController::class, 'show'])->name('profile');
     Route::patch('profile', [ProfileController::class, 'update'])->name('client.profile.update');
     Route::post('profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
