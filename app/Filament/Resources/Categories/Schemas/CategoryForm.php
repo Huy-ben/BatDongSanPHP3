@@ -11,13 +11,15 @@ use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ImageColumn;
-
+use Filament\Schemas\Components\Section;
 class CategoryForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->schema([
+                Section::make('Thông tin danh mục')
+                    ->schema([
                 TextInput::make('category_name')
                     ->label('Tên danh mục')
                     ->placeholder('Nhập tên danh mục')
@@ -53,6 +55,7 @@ class CategoryForm
                     ->disk('public')
                     ->directory('categories')
                     ->nullable(),
+            ])
             ]);
 
     }
