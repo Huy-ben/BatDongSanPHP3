@@ -151,6 +151,33 @@ function formatDate(value) {
     }).format(new Date(value));
 }
 
+function getAuthorInitials(name) {
+    const normalizedName = String(name || '').trim();
+
+    if (!normalizedName) {
+        return 'CT';
+    }
+
+    const asciiName = normalizedName
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '');
+
+    const words = asciiName
+        .split(/\s+/)
+        .map((word) => word.replace(/[^A-Za-z]/g, ''))
+        .filter(Boolean);
+
+    if (words.length === 0) {
+        return 'CT';
+    }
+
+    if (words.length === 1) {
+        return words[0].slice(0, 2).toUpperCase();
+    }
+
+    return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+}
+
 function applyFilters() {
     currentPage.value = 1;
     fetchPosts(1);
@@ -184,20 +211,12 @@ function goToPage(page) {
                     <div class="mb-4 flex flex-wrap gap-2 text-[11px] font-bold tracking-widest uppercase">
                         <button
                             class="rounded-full border px-4 py-2 transition"
-                            :class="currentListingType === 'sell' ? 'border-[#ff9c22] bg-[#ff9c22] text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-[#ff9c22]/40 hover:text-[#ff9c22]'"
-                            @click="switchListingType('sell')"
-                        >
-                            Nhà đất bán
-                        </button>
-                        <button
-                            class="rounded-full border px-4 py-2 transition"
                             :class="currentListingType === 'rent' ? 'border-[#ff9c22] bg-[#ff9c22] text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-[#ff9c22]/40 hover:text-[#ff9c22]'"
                             @click="switchListingType('rent')"
                         >
                             Nhà đất cho thuê
                         </button>
                     </div>
-
                     <div class="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-6">
                         <div class="relative">
                             <label class="mb-1.5 block text-[10px] font-bold tracking-widest text-gray-400 uppercase">
@@ -368,7 +387,7 @@ function goToPage(page) {
                                             class="mt-2.5 flex items-center gap-4"
                                         >
                                             <span
-                                                class="text-lg font-bold text-gray-900"
+                                                class="text-lg font-bold text-[#ff9c22]"
                                                 >{{ formatPrice(post.price) }}</span
                                             >
                                             <span
@@ -397,7 +416,7 @@ function goToPage(page) {
                                             <div
                                                 class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-700 shadow-sm"
                                             >
-                                                QT
+                                                {{ getAuthorInitials(post.seller_name || 'Chủ tin') }}
                                             </div>
                                             <div>
                                                 <p
@@ -464,7 +483,7 @@ function goToPage(page) {
                                 <h3
                                     class="m-0 text-lg leading-none font-black tracking-wide text-gray-900 uppercase"
                                 >
-                                    <span class="text-[#ff9c22]">Tin tức</span>
+                                    <span class="text-[#ff9c22]">Tin tức</span> nổi bật
                                 </h3>
                             </div>
 

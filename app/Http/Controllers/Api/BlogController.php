@@ -19,7 +19,7 @@ class BlogController extends Controller
 
     public function show(Blog $blog)
     {
-        if ($blog->status !== 'published') {
+        if ($blog->status !== '1') {
             abort(404);
         }
 

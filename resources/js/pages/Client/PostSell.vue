@@ -151,6 +151,33 @@ function formatDate(value) {
     }).format(new Date(value));
 }
 
+function getAuthorInitials(name) {
+    const normalizedName = String(name || '').trim();
+
+    if (!normalizedName) {
+        return 'NB';
+    }
+
+    const asciiName = normalizedName
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '');
+
+    const words = asciiName
+        .split(/\s+/)
+        .map((word) => word.replace(/[^A-Za-z]/g, ''))
+        .filter(Boolean);
+
+    if (words.length === 0) {
+        return 'NB';
+    }
+
+    if (words.length === 1) {
+        return words[0].slice(0, 2).toUpperCase();
+    }
+
+    return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+}
+
 function applyFilters() {
     currentPage.value = 1;
     fetchPosts(1);
@@ -188,13 +215,6 @@ function goToPage(page) {
                             @click="switchListingType('sell')"
                         >
                             Nhà đất bán
-                        </button>
-                        <button
-                            class="rounded-full border px-4 py-2 transition"
-                            :class="currentListingType === 'rent' ? 'border-[#ff9c22] bg-[#ff9c22] text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-[#ff9c22]/40 hover:text-[#ff9c22]'"
-                            @click="switchListingType('rent')"
-                        >
-                            Nhà đất cho thuê
                         </button>
                     </div>
 
@@ -349,11 +369,12 @@ function goToPage(page) {
 
                                 <div class="flex flex-1 flex-col justify-between p-5">
                                     <div>
-                                        <h3 class="line-clamp-2 text-base font-semibold text-gray-800 transition duration-200 group-hover:text-[#ff9c22]">
+                                        <h3                                             class="line-clamp-1 text-base font-bold text-gray-800 uppercase transition duration-300 group-hover:text-[#ff9c22]"
+                                        >
                                             {{ post.title }}
                                         </h3>
                                         <div class="mt-3 flex flex-wrap items-center gap-3">
-                                            <span class="text-lg font-bold text-gray-900">{{ formatPrice(post.price) }}</span>
+                                            <span class="text-lg font-bold text-[#ff9c22]">{{ formatPrice(post.price) }}</span>
                                             <span class="flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">
                                                 <i class="fa-solid fa-ruler-combined"></i> {{ formatArea(post.area) }}
                                             </span>
@@ -368,7 +389,7 @@ function goToPage(page) {
 
                                     <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
                                         <div class="flex items-center gap-3">
-                                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-[10px] font-semibold text-gray-600">QT</div>
+                                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-[10px] font-semibold text-gray-600">{{ getAuthorInitials(post.seller_name || 'Người bán') }}</div>
                                             <div>
                                                 <p class="text-[11px] font-semibold leading-none text-gray-800">{{ post.seller_name || 'Người bán' }}</p>
                                                 <p class="mt-1 text-[10px] text-gray-400">{{ post.category_name }}</p>

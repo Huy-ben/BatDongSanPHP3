@@ -73,23 +73,23 @@ class BlogSeeder extends Seeder
     private function generateContent($title)
     {
         return "
-<h2>{$title}</h2>
+            <h2>{$title}</h2>
 
-<p>Bất động sản luôn là một trong những lĩnh vực đầu tư hấp dẫn hiện nay. Tuy nhiên, để đạt được hiệu quả cao, người mua cần trang bị đầy đủ kiến thức và kinh nghiệm.</p>
+            <p>Bất động sản luôn là một trong những lĩnh vực đầu tư hấp dẫn hiện nay. Tuy nhiên, để đạt được hiệu quả cao, người mua cần trang bị đầy đủ kiến thức và kinh nghiệm.</p>
 
-<p>Trong bài viết này, chúng tôi sẽ chia sẻ những thông tin hữu ích giúp bạn hiểu rõ hơn về thị trường cũng như cách đưa ra quyết định chính xác.</p>
+            <p>Trong bài viết này, chúng tôi sẽ chia sẻ những thông tin hữu ích giúp bạn hiểu rõ hơn về thị trường cũng như cách đưa ra quyết định chính xác.</p>
 
-<h3>1. Nghiên cứu thị trường</h3>
-<p>Trước khi đầu tư, bạn cần tìm hiểu kỹ khu vực, giá cả và tiềm năng phát triển.</p>
+            <h3>1. Nghiên cứu thị trường</h3>
+            <p>Trước khi đầu tư, bạn cần tìm hiểu kỹ khu vực, giá cả và tiềm năng phát triển.</p>
 
-<h3>2. Xác định nhu cầu</h3>
-<p>Bạn mua để ở hay đầu tư? Điều này ảnh hưởng rất lớn đến quyết định.</p>
+            <h3>2. Xác định nhu cầu</h3>
+            <p>Bạn mua để ở hay đầu tư? Điều này ảnh hưởng rất lớn đến quyết định.</p>
 
-<h3>3. Kiểm tra pháp lý</h3>
-<p>Đảm bảo bất động sản có đầy đủ giấy tờ hợp pháp.</p>
-
-<h3>Kết luận</h3>
-<p>Hy vọng bài viết giúp bạn có thêm kinh nghiệm trong việc đầu tư bất động sản.</p>
-";
+            <h3>3. Kiểm tra pháp lý</h3>
+            <p>Đảm bảo bất động sản có đầy đủ giấy tờ hợp pháp.</p>
+            
+            <h3>Kết luận</h3>
+            <p>Hy vọng bài viết giúp bạn có thêm kinh nghiệm trong việc đầu tư bất động sản.</p>
+            ";
     }
 }

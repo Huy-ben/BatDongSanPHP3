@@ -22,6 +22,7 @@ class CategorySeeder extends Seeder
             'description' => 'Tin tức, blog bất động sản',
             'parent_id' => null,
             'image' => null,
+            'status' => '1',
             'created_at' => $now,
             'updated_at' => $now,
         ]);
@@ -31,6 +32,7 @@ class CategorySeeder extends Seeder
             'description' => 'Danh sách tin đăng bất động sản',
             'parent_id' => null,
             'image' => null,
+            'status' => '1',
             'created_at' => $now,
             'updated_at' => $now,
         ]);
@@ -41,6 +43,7 @@ class CategorySeeder extends Seeder
             'description' => 'Bất động sản bán',
             'parent_id' => $listingRootId,
             'image' => null,
+            'status' => '1',
             'created_at' => $now,
             'updated_at' => $now,
         ]);
@@ -50,6 +53,7 @@ class CategorySeeder extends Seeder
             'description' => 'Bất động sản cho thuê',
             'parent_id' => $listingRootId,
             'image' => null,
+            'status' => '1',
             'created_at' => $now,
             'updated_at' => $now,
         ]);
@@ -89,6 +93,7 @@ class CategorySeeder extends Seeder
                 'description' => 'Bán ' . $item['name'],
                 'parent_id' => $banId,
                 'image' => $item['image'],
+                'status' => '1',
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
@@ -101,6 +106,7 @@ class CategorySeeder extends Seeder
                 'description' => 'Cho thuê ' . $item['name'],
                 'parent_id' => $thueId,
                 'image' => $item['image'],
+                'status' => '1',
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
