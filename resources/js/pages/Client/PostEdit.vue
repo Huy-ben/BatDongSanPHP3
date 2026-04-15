@@ -52,10 +52,12 @@ const props = defineProps<{
 
 const statusOptions = [
     { label: 'Bản nháp', value: 'draft' },
-    { label: 'Đã đăng', value: 'published' },
-    { label: 'Bị từ chối', value: 'rejected' },
     { label: 'Chờ duyệt', value: 'waiting' },
 ];
+
+const initialEditableStatus = ['draft', 'waiting'].includes(props.post.status)
+    ? props.post.status
+    : 'waiting';
 
 const localError = ref('');
 const imageFiles = ref<File[]>([]);
@@ -83,7 +85,7 @@ const form = useForm({
     address: props.post.address ?? '',
     location: props.post.location ?? '',
     description: props.post.description ?? '',
-    status: props.post.status ?? 'draft',
+    status: initialEditableStatus,
     images: [] as File[],
     thumbnail_index: 0,
 });

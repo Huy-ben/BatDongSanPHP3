@@ -3,13 +3,17 @@
 namespace App\Filament\Resources\Posts\Tables;
 
 use App\Models\Post;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\DB;
 
 class PostsTable
 {
@@ -84,10 +88,87 @@ class PostsTable
                     ]),
             ])
             ->recordActions([
+                Action::make('approve')
+                    ->label('Duyệt')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (Post $record): bool => $record->status === Post::STATUS_WAITING)
+                    ->action(fn (Post $record) => $record->update(['status' => Post::STATUS_PUBLISHED])),
+                Action::make('reject')
+                    ->label('Từ chối')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->form([
+                        Textarea::make('reject_reason')
+                            ->label('Lý do từ chối')
+                            ->required()
+                            ->rows(4)
+                            ->maxLength(1000),
+                    ])
+                    ->visible(fn (Post $record): bool => $record->status === Post::STATUS_WAITING)
+                    ->action(function (Post $record, array $data): void {
+                        $record->update(['status' => Post::STATUS_REJECTED]);
+
+                        DB::table('notifications')->insert([
+                            'user_id' => $record->seller_id,
+                            'title' => 'Bài đăng bị từ chối',
+                            'content' => "Bài đăng '{$record->title}' đã bị từ chối. Lý do: {$data['reject_reason']}",
+                            'is_read' => false,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }),
+                Action::make('markWaiting')
+                    ->label('Chờ duyệt')
+                    ->icon('heroicon-o-clock')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->visible(fn (Post $record): bool => $record->status === Post::STATUS_DRAFT)
+                    ->action(fn (Post $record) => $record->update(['status' => Post::STATUS_WAITING])),
                 EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('approveSelected')
+                        ->label('Duyệt đã chọn')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(fn ($records) => $records->each(fn (Post $record) => $record->update(['status' => Post::STATUS_PUBLISHED]))),
+                    BulkAction::make('rejectSelected')
+                        ->label('Từ chối đã chọn')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->form([
+                            Textarea::make('reject_reason')
+                                ->label('Lý do từ chối')
+                                ->required()
+                                ->rows(4)
+                                ->maxLength(1000),
+                        ])
+                        ->action(function ($records, array $data): void {
+                            $now = now();
+
+                            $records->each(function (Post $record) use ($data, $now): void {
+                                $record->update(['status' => Post::STATUS_REJECTED]);
+
+                                DB::table('notifications')->insert([
+                                    'user_id' => $record->seller_id,
+                                    'title' => 'Bài đăng bị từ chối',
+                                    'content' => "Bài đăng '{$record->title}' đã bị từ chối. Lý do: {$data['reject_reason']}",
+                                    'is_read' => false,
+                                    'created_at' => $now,
+                                    'updated_at' => $now,
+                                ]);
+                            });
+                        }),
+                    BulkAction::make('markWaitingSelected')
+                        ->label('Đặt chờ duyệt')
+                        ->icon('heroicon-o-clock')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->action(fn ($records) => $records->each(fn (Post $record) => $record->update(['status' => Post::STATUS_WAITING]))),
                     DeleteBulkAction::make(),
                 ]),
             ]);

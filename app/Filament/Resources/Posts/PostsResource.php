@@ -19,11 +19,11 @@ class PostsResource extends Resource
     protected static ?string $model = Post::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::HomeModern;
-    protected static ?string $navigationLabel = 'Bài đăng';
+    protected static ?string $navigationLabel = 'Duyệt bài đăng';
 
-    protected static ?string $modelLabel = 'Bài đăng';
+    protected static ?string $modelLabel = 'bài đăng';
 
-    protected static ?string $pluralModelLabel = 'Bài đăng';
+    protected static ?string $pluralModelLabel = 'bài đăng';
 
     protected static ?int $navigationSort = 2;
     protected static ?string $recordTitleAttribute = 'title';

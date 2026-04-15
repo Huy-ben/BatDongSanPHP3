@@ -156,7 +156,7 @@ class PostController extends Controller
             'address' => ['required', 'string', 'max:255'],
             'location' => ['required', 'regex:/^-?\d{1,2}(?:\.\d+)?,\s?-?\d{1,3}(?:\.\d+)?$/'],
             'description' => ['required', 'string', 'min:10'],
-            'status' => ['required', 'in:draft,published,rejected,waiting'],
+            'status' => ['required', 'in:draft,waiting'],
             'images' => ['required', 'array', 'min:1', 'max:'.$limits['max_images']],
             'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'thumbnail_index' => ['nullable', 'integer', 'min:0'],
@@ -168,6 +168,9 @@ class PostController extends Controller
 
         $thumbnailIndex = (int) ($validated['thumbnail_index'] ?? 0);
         $thumbnailIndex = max(0, min($thumbnailIndex, count($validated['images']) - 1));
+        $nextStatus = $validated['status'] === Post::STATUS_DRAFT
+            ? Post::STATUS_DRAFT
+            : Post::STATUS_WAITING;
 
         $postData = [
             'title' => $validated['title'],
@@ -178,7 +181,7 @@ class PostController extends Controller
             'address' => $validated['address'],
             'location' => $validated['location'],
             'description' => $validated['description'],
-            'status' => $validated['status'],
+            'status' => $nextStatus,
         ];
 
         if (Schema::hasColumn('posts', 'slug')) {
@@ -219,7 +222,7 @@ class PostController extends Controller
             'address' => ['required', 'string', 'max:255'],
             'location' => ['required', 'regex:/^-?\d{1,2}(?:\.\d+)?,\s?-?\d{1,3}(?:\.\d+)?$/'],
             'description' => ['required', 'string', 'min:10'],
-            'status' => ['required', 'in:draft,published,rejected,waiting'],
+            'status' => ['required', 'in:draft,waiting'],
             'images' => ['nullable', 'array', 'max:'.$limits['max_images']],
             'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'thumbnail_index' => ['nullable', 'integer', 'min:0'],
@@ -229,7 +232,11 @@ class PostController extends Controller
             'location.regex' => 'Tọa độ không hợp lệ. Vui lòng chọn lại địa chỉ trên bản đồ.',
         ]);
 
-        DB::transaction(function () use ($post, $validated): void {
+        $nextStatus = $validated['status'] === Post::STATUS_DRAFT
+            ? Post::STATUS_DRAFT
+            : Post::STATUS_WAITING;
+
+        DB::transaction(function () use ($post, $validated, $nextStatus): void {
             $originalTitle = $post->title;
 
             $post->fill([
@@ -240,7 +247,7 @@ class PostController extends Controller
                 'address' => $validated['address'],
                 'location' => $validated['location'],
                 'description' => $validated['description'],
-                'status' => $validated['status'],
+                'status' => $nextStatus,
             ]);
 
             if (Schema::hasColumn('posts', 'slug') && $originalTitle !== $validated['title']) {

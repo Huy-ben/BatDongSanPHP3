@@ -63,8 +63,6 @@ const props = defineProps<{
 
 const statusOptions = [
     { label: 'Bản nháp', value: 'draft' },
-    { label: 'Đã đăng', value: 'published' },
-    { label: 'Bị từ chối', value: 'rejected' },
     { label: 'Chờ duyệt', value: 'waiting' },
 ];
 
