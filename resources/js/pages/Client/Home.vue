@@ -1,15 +1,17 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import axios from 'axios';
 import { Link } from '@inertiajs/vue3';
 import ClientLayout from '@/layouts/ClientLayout.vue';
-import { onMounted } from 'vue';
 import { getBearerAuthHeaders } from '@/services/config';
+import { jam_read_num_forvietnamese } from '@/utils/money';
 const posts = ref([]);
 const categories = ref([]);
 const blogs = ref([]);
+const allCategories = ref([]);
 onMounted(() => {
     fetchHomeData();
+    fetchCategories();
 });
 const fetchHomeData = () => {
     axios.get('/api/home', {
@@ -26,18 +28,37 @@ const fetchHomeData = () => {
         });
 };
 
-const propertyTypes = [
-    'Tất cả loại',
-    'Căn hộ',
-    'Nhà phố',
-    'Biệt thự',
-    'Đất nền',
-    'Kho xưởng',
-];
+const DEFAULT_PROPERTY_TYPE = 'Tất cả loại';
 
-const selectedPropertyType = ref(propertyTypes[0]);
+const fetchCategories = () => {
+    axios.get('/api/category')
+        .then(response => {
+            allCategories.value = response.data ?? [];
+        })
+        .catch(error => {
+            console.error('Error fetching categories:', error);
+        });
+};
+
+const activeListingType = ref('sell');
+const searchKeyword = ref('');
+const selectedPropertyType = ref(DEFAULT_PROPERTY_TYPE);
 const minPrice = ref('');
 const maxPrice = ref('');
+
+const propertyTypes = computed(() => {
+    const categoryById = Object.fromEntries(allCategories.value.map((category) => [category.id, category]));
+    const parentName = activeListingType.value === 'rent' ? 'Cho thuê' : 'Bán';
+
+    const dynamicTypes = [...new Set(
+        allCategories.value
+            .filter((category) => categoryById[category.parent_id]?.category_name === parentName)
+            .map((category) => category.category_name)
+            .filter(Boolean),
+    )];
+
+    return [DEFAULT_PROPERTY_TYPE, ...dynamicTypes];
+});
 
 const projectFavorites = ref(new Set());
 const hotFavorites = ref(new Set());
@@ -45,18 +66,36 @@ const sliderRef = ref(null);
 const visiblePostsCount = ref(4);
 const loadMoreClicks = ref(0);
 
-const projectPosts = computed(() => posts.value.slice(0, 6));
-const visibleHotPosts = computed(() => posts.value.slice(0, visiblePostsCount.value));
-const canShowLoadMoreButton = computed(() => posts.value.length > 0);
+const filteredPostsByType = computed(() => {
+    if (selectedPropertyType.value === DEFAULT_PROPERTY_TYPE) {
+        return posts.value;
+    }
+
+    return posts.value.filter((post) => post.category_name === selectedPropertyType.value);
+});
+
+const projectPosts = computed(() => filteredPostsByType.value.slice(0, 6));
+const visibleHotPosts = computed(() => filteredPostsByType.value.slice(0, visiblePostsCount.value));
+const canShowLoadMoreButton = computed(() => filteredPostsByType.value.length > 0);
 const loadMoreLabel = computed(() =>
     loadMoreClicks.value === 0
         ? 'XEM THÊM SẢN PHẨM (+4)'
         : 'XEM TẤT CẢ SẢN PHẨM',
 );
 
+watch(selectedPropertyType, () => {
+    visiblePostsCount.value = 4;
+    loadMoreClicks.value = 0;
+});
+
+watch([activeListingType, propertyTypes], () => {
+    if (!propertyTypes.value.includes(selectedPropertyType.value)) {
+        selectedPropertyType.value = DEFAULT_PROPERTY_TYPE;
+    }
+});
+
 function formatCurrency(value) {
-    const amount = Number(value || 0);
-    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
+    return jam_read_num_forvietnamese(value);
 }
 
 function formatArea(value) {
@@ -98,12 +137,49 @@ function toggleHotFavorite(id) {
 
 function handleLoadMore() {
     if (loadMoreClicks.value === 0) {
-        visiblePostsCount.value = Math.min(visiblePostsCount.value + 4, posts.value.length);
+        visiblePostsCount.value = Math.min(visiblePostsCount.value + 4, filteredPostsByType.value.length);
         loadMoreClicks.value += 1;
         return;
     }
 
     window.location.href = '/post-sell';
+}
+
+function submitQuickSearch() {
+    const searchParams = new URLSearchParams();
+
+    if (searchKeyword.value.trim()) {
+        searchParams.set('keyword', searchKeyword.value.trim());
+    }
+
+    if (selectedPropertyType.value && selectedPropertyType.value !== DEFAULT_PROPERTY_TYPE) {
+        searchParams.set('property_type', selectedPropertyType.value);
+    }
+
+    if (minPrice.value) {
+        searchParams.set('price_min', minPrice.value);
+    }
+
+    if (maxPrice.value) {
+        searchParams.set('price_max', maxPrice.value);
+    }
+
+    const targetPath = activeListingType.value === 'rent' ? '/post-rent' : '/post-sell';
+    const queryString = searchParams.toString();
+
+    window.location.href = queryString ? `${targetPath}?${queryString}` : targetPath;
+}
+
+function getCategoryFilterUrl(categoryName) {
+    const searchParams = new URLSearchParams();
+
+    if (categoryName) {
+        searchParams.set('property_type', categoryName);
+    }
+
+    const queryString = searchParams.toString();
+
+    return queryString ? `/post-sell?${queryString}` : '/post-sell';
 }
 </script>
 
@@ -156,12 +232,24 @@ function handleLoadMore() {
                             class="mb-4 flex gap-2 overflow-x-auto text-sm font-bold tracking-wider uppercase md:mb-5 md:gap-4"
                         >
                             <button
-                                class="shrink-0 border-b-2 border-orange-600 px-3 pb-3 text-orange-600"
+                                @click="activeListingType = 'sell'"
+                                class="shrink-0 border-b-2 px-3 pb-3 transition"
+                                :class="
+                                    activeListingType === 'sell'
+                                        ? 'border-orange-600 text-orange-600'
+                                        : 'border-transparent text-gray-500 hover:border-orange-500 hover:text-orange-500'
+                                "
                             >
                                 Nhà đất bán
                             </button>
                             <button
-                                class="shrink-0 px-3 pb-3 text-gray-500 transition hover:border-b-2 hover:border-orange-500 hover:text-orange-500"
+                                @click="activeListingType = 'rent'"
+                                class="shrink-0 border-b-2 px-3 pb-3 transition"
+                                :class="
+                                    activeListingType === 'rent'
+                                        ? 'border-orange-600 text-orange-600'
+                                        : 'border-transparent text-gray-500 hover:border-orange-500 hover:text-orange-500'
+                                "
                             >
                                 Nhà đất cho thuê
                             </button>
@@ -175,6 +263,7 @@ function handleLoadMore() {
                                     class="fa-solid fa-magnifying-glass absolute top-3.5 left-3 text-gray-400"
                                 ></i>
                                 <input
+                                    v-model="searchKeyword"
                                     type="text"
                                     placeholder="Tìm kiếm địa điểm, dự án..."
                                     class="w-full rounded-xl border border-gray-200 bg-white py-3 pr-4 pl-10 text-sm shadow-sm transition focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
@@ -221,6 +310,7 @@ function handleLoadMore() {
 
                             <div class="md:col-span-3">
                                 <button
+                                    @click="submitQuickSearch"
                                     class="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-orange-500 to-amber-500 py-3 font-bold text-white shadow-lg transition hover:from-orange-600 hover:to-amber-600"
                                 >
                                     <i class="fa-solid fa-search"></i> Tìm kiếm
@@ -259,7 +349,7 @@ function handleLoadMore() {
                         <a
                             v-for="category in categories"
                             :key="category.id"
-                            href="#"
+                            :href="getCategoryFilterUrl(category.category_name)"
                             class="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                         >
                             <div class="relative h-28 overflow-hidden">
