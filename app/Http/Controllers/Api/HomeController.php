@@ -24,6 +24,7 @@ class HomeController extends Controller
                 'category.parentCategory:id,category_name',
                 'thumbnailImage:id,product_id,image_url',
             ])
+            ->where('status', Post::STATUS_PUBLISHED)
             ->orderByDesc('id')
             ->limit(24)
             ->get()

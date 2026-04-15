@@ -37,7 +37,7 @@ class FavoriteController extends Controller
             ->map(function (Favorite $favorite) {
                 $post = $favorite->post;
 
-                if (! $post || (int) $post->status !== 1) {
+                if (! $post || (string) $post->status !== Post::STATUS_PUBLISHED) {
                     return null;
                 }
 
@@ -71,7 +71,7 @@ class FavoriteController extends Controller
 
         $post = Post::query()->findOrFail((int) $validated['post_id']);
 
-        if ((string) $post->status !== '1') {
+        if ((string) $post->status !== Post::STATUS_PUBLISHED) {
             return response()->json([
                 'message' => 'Tin đăng không khả dụng để lưu.',
             ], 422);

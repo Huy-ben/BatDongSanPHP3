@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Posts\Tables;
 
+use App\Models\Post;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -47,8 +48,18 @@ class PostsTable
                 TextColumn::make('status')
                     ->label('Trạng thái')
                     ->badge()
-                    ->formatStateUsing(fn ($state): string => (int) $state === 1 ? 'Hiện' : 'Ẩn')
-                    ->color(fn ($state): string => (int) $state === 1 ? 'success' : 'gray')
+                    ->formatStateUsing(fn ($state): string => match ((string) $state) {
+                        Post::STATUS_PUBLISHED => 'Đã đăng',
+                        Post::STATUS_REJECTED => 'Bị từ chối',
+                        Post::STATUS_WAITING => 'Chờ duyệt',
+                        default => 'Bản nháp',
+                    })
+                    ->color(fn ($state): string => match ((string) $state) {
+                        Post::STATUS_PUBLISHED => 'success',
+                        Post::STATUS_REJECTED => 'danger',
+                        Post::STATUS_WAITING => 'warning',
+                        default => 'gray',
+                    })
                     ->sortable(),
 
                 TextColumn::make('images_count')
@@ -66,8 +77,10 @@ class PostsTable
                 SelectFilter::make('status')
                     ->label('Trạng thái')
                     ->options([
-                        '1' => 'Hiện',
-                        '0' => 'Ẩn',
+                        Post::STATUS_DRAFT => 'Bản nháp',
+                        Post::STATUS_PUBLISHED => 'Đã đăng',
+                        Post::STATUS_REJECTED => 'Bị từ chối',
+                        Post::STATUS_WAITING => 'Chờ duyệt',
                     ]),
             ])
             ->recordActions([

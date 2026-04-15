@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Image;
+use App\Models\ListingPackage;
 use App\Models\Post;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class PostController extends Controller
             return null;
         }
 
-        return DB::table('listing_packages')
+        return ListingPackage::query()
             ->where('user_id', $userId)
             ->where('status', '1')
             ->whereDate('expiry_date', '>=', now()->toDateString())
@@ -155,7 +156,7 @@ class PostController extends Controller
             'address' => ['required', 'string', 'max:255'],
             'location' => ['required', 'regex:/^-?\d{1,2}(?:\.\d+)?,\s?-?\d{1,3}(?:\.\d+)?$/'],
             'description' => ['required', 'string', 'min:10'],
-            'status' => ['required', 'in:0,1'],
+            'status' => ['required', 'in:draft,published,rejected,waiting'],
             'images' => ['required', 'array', 'min:1', 'max:'.$limits['max_images']],
             'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'thumbnail_index' => ['nullable', 'integer', 'min:0'],
@@ -218,7 +219,7 @@ class PostController extends Controller
             'address' => ['required', 'string', 'max:255'],
             'location' => ['required', 'regex:/^-?\d{1,2}(?:\.\d+)?,\s?-?\d{1,3}(?:\.\d+)?$/'],
             'description' => ['required', 'string', 'min:10'],
-            'status' => ['required', 'in:0,1'],
+            'status' => ['required', 'in:draft,published,rejected,waiting'],
             'images' => ['nullable', 'array', 'max:'.$limits['max_images']],
             'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'thumbnail_index' => ['nullable', 'integer', 'min:0'],
@@ -315,7 +316,7 @@ class PostController extends Controller
 
         if ($postIdentifier !== null) {
             $postQuery->where(function ($query) use ($request) {
-                $query->where('status', '1');
+                $query->where('status', Post::STATUS_PUBLISHED);
 
                 if ($request->user()) {
                     $query->orWhere('seller_id', $request->user()->id);
@@ -335,7 +336,7 @@ class PostController extends Controller
             $post = $postQuery->firstOrFail();
         } else {
             $post = $postQuery
-                ->where('status', '1')
+                ->where('status', Post::STATUS_PUBLISHED)
                 ->latest('id')
                 ->first();
         }
@@ -350,13 +351,13 @@ class PostController extends Controller
         $sellerPostCount = $post->seller
             ? Post::query()
                 ->where('seller_id', $post->seller_id)
-                ->where('status', '1')
+                ->where('status', Post::STATUS_PUBLISHED)
                 ->count()
             : 0;
 
         $relatedPosts = Post::query()
             ->with('thumbnailImage:id,product_id,image_url')
-            ->where('status', '1')
+            ->where('status', Post::STATUS_PUBLISHED)
             ->where('id', '!=', $post->id)
             ->where('category_id', $post->category_id)
             ->latest('id')
@@ -379,7 +380,7 @@ class PostController extends Controller
                 'category.parentCategory:id,category_name',
                 'seller:id,name,phone_number,avatar',
             ])
-            ->where('status', '1')
+            ->where('status', Post::STATUS_PUBLISHED)
             ->whereExists(function ($query) {
                 $query->selectRaw('1')
                     ->from('listing_packages')

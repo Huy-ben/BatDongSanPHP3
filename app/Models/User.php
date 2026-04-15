@@ -46,10 +46,15 @@ class User extends Authenticatable implements FilamentUser
         'avatar',
         'password',
         'role',
+        'status',
     ];
 
     public function favorites(): HasMany
     {
         return $this->hasMany(Favorite::class);
+    }
+    public function listingPackages(): HasMany
+    {
+        return $this->hasMany(ListingPackage::class);
     }
 }

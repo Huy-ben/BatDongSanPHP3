@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\ListingPackage;
 use App\Models\Post;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
 
@@ -18,12 +18,12 @@ class ProfileController extends Controller
         $user = $request->user();
         $page = $request->query('page', 1);
 
-        $activePackage = DB::table('listing_packages')
+        $activePackage = ListingPackage::query()
             ->where('user_id', $user->id)
             ->where('status', '1')
             ->whereDate('expiry_date', '>=', now()->toDateString())
             ->orderByDesc('expiry_date')
-            ->first(['package_name', 'package_type', 'expiry_date']);
+            ->first(['id', 'package_name', 'package_type', 'expiry_date']);
 
         $postsData = [
             'data' => [],
@@ -37,6 +37,7 @@ class ProfileController extends Controller
             $posts = Post::query()
                 ->with('thumbnailImage')
                 ->where('seller_id', $user->id)
+                ->where('status', Post::STATUS_PUBLISHED)
                 ->latest()
                 ->paginate(12, ['*'], 'page', $page);
 
@@ -48,7 +49,7 @@ class ProfileController extends Controller
                         'price' => (int) $post->price,
                         'area' => (float) $post->area,
                         'address' => $post->address,
-                        'status' => (string) $post->status === '1',
+                        'status' => (string) $post->status,
                         'created_at' => $post->created_at?->format('d/m/Y'),
                         'thumbnail' => $post->thumbnailImage?->image_url,
                         'edit_url' => route('post-edit', $post),

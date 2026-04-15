@@ -80,7 +80,7 @@ class PostSeeder extends Seeder
                     'location' => $location,
                     'address' => $address,
                     'description' => $description,
-                    'status' => "1",
+                    'status' => "published",
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);

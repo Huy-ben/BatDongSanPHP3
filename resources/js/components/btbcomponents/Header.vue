@@ -123,6 +123,12 @@ const handleLogout = async () => {
                     <div
                         class="pointer-events-none absolute right-0 top-full z-30 w-52 translate-y-2 rounded-xl border border-zinc-200 bg-white p-2 opacity-0 shadow-lg transition-all duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100"
                     >
+                        <a v-if="authUser.role == 0"
+                            href="/admin"
+                            class="block rounded-lg px-3 py-2 text-sm font-medium text-red-500 transition hover:bg-zinc-100 hover:text-zinc-900"
+                        >
+                            Trang quản trị
+                        </a>
                         <a
                             href="/profile"
                             class="block rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900"

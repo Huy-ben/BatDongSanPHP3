@@ -11,6 +11,18 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Post extends Model
 {
     use HasFactory;
+
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_PUBLISHED = 'published';
+    public const STATUS_REJECTED = 'rejected';
+    public const STATUS_WAITING = 'waiting';
+
+    public const STATUSES = [
+        self::STATUS_DRAFT,
+        self::STATUS_PUBLISHED,
+        self::STATUS_REJECTED,
+        self::STATUS_WAITING,
+    ];
     protected $fillable = [
         'title',
         'seller_id',
@@ -31,12 +43,14 @@ class Post extends Model
         'area' => 'float',
         'location' => 'string',
         'description' => 'string',
-        'status' => 'integer',
+        'status' => 'string',
     ];
 
     public function setStatusAttribute($value): void
     {
-        $this->attributes['status'] = filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ? '1' : '0';
+        $status = in_array($value, self::STATUSES, true) ? $value : self::STATUS_DRAFT;
+
+        $this->attributes['status'] = $status;
     }
 
     public function seller(): BelongsTo

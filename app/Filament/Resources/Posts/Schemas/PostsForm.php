@@ -53,10 +53,12 @@ class PostsForm
                 Select::make('status')
                     ->label('Trạng thái')
                     ->options([
-                        1 => 'Hiện',
-                        0 => 'Ẩn',
+                        Post::STATUS_DRAFT => 'Bản nháp',
+                        Post::STATUS_PUBLISHED => 'Đã đăng',
+                        Post::STATUS_REJECTED => 'Bị từ chối',
+                        Post::STATUS_WAITING => 'Chờ duyệt',
                     ])
-                    ->default(1)
+                    ->default(Post::STATUS_DRAFT)
                     ->required(),
 
                 FileUpload::make('images')

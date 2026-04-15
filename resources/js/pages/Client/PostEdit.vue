@@ -51,8 +51,10 @@ const props = defineProps<{
 }>();
 
 const statusOptions = [
-    { label: 'Hiển thị', value: '1' },
-    { label: 'Ẩn', value: '0' },
+    { label: 'Bản nháp', value: 'draft' },
+    { label: 'Đã đăng', value: 'published' },
+    { label: 'Bị từ chối', value: 'rejected' },
+    { label: 'Chờ duyệt', value: 'waiting' },
 ];
 
 const localError = ref('');
@@ -81,7 +83,7 @@ const form = useForm({
     address: props.post.address ?? '',
     location: props.post.location ?? '',
     description: props.post.description ?? '',
-    status: props.post.status ?? '1',
+    status: props.post.status ?? 'draft',
     images: [] as File[],
     thumbnail_index: 0,
 });
@@ -602,7 +604,17 @@ onBeforeUnmount(() => {
                                     <h3 class="mt-2 line-clamp-2 text-lg leading-snug font-black text-slate-950">{{ form.title || 'Tiêu đề bài đăng sẽ hiển thị ở đây' }}</h3>
                                     <div class="mt-4 flex items-center justify-between gap-3 text-sm text-slate-500">
                                         <span>{{ form.area || '0' }} m²</span>
-                                        <span>{{ form.status === '1' ? 'Đang hiển thị' : 'Đang ẩn' }}</span>
+                                        <span>
+                                            {{
+                                                form.status === 'published'
+                                                    ? 'Đã đăng'
+                                                    : form.status === 'waiting'
+                                                        ? 'Chờ duyệt'
+                                                        : form.status === 'rejected'
+                                                            ? 'Bị từ chối'
+                                                            : 'Bản nháp'
+                                            }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
