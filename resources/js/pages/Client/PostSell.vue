@@ -202,6 +202,14 @@ function goToPage(page) {
     fetchPosts(page);
 }
 
+function goToBlogDetail(blogId) {
+    if (!blogId) {
+        return;
+    }
+
+    window.location.href = `/blog-detail?id=${blogId}`;
+}
+
 function goToPostDetail(postId) {
     if (!postId) {
         return;
@@ -456,6 +464,7 @@ function goToPostDetail(postId) {
                                     v-for="blog in blogs.slice(0, 3)"
                                     :key="blog.id"
                                     class="group cursor-pointer overflow-hidden rounded-lg border border-gray-100 bg-white p-2 transition hover:shadow-md"
+                                    @click="goToBlogDetail(blog.id)"
                                 >
                                     <div class="h-22 overflow-hidden rounded-md bg-gray-200">
                                         <img :src="blog.image" class="h-full w-full object-cover transition duration-500 group-hover:scale-110" />

@@ -57,6 +57,8 @@ const userInitial = computed(() => {
     return name?.charAt(0).toUpperCase() ?? 'B'
 })
 
+const userAvatar = computed(() => authUser.value?.avatar?.trim() || '')
+
 const unreadNotificationCount = computed(() => {
     return headerNotifications.value.filter((item) => !item.is_read).length
 })
@@ -222,8 +224,13 @@ watch(
                         aria-label="Tài khoản"
                         href="/profile"
                     >
-                    <p v-if="!authUser.avatar">{{ userInitial }}</p>
-                    <img v-else :src="authUser.avatar" alt="Avatar" class="h-full w-full rounded-full object-cover" />
+                        <p v-if="!userAvatar">{{ userInitial }}</p>
+                        <img
+                            v-else
+                            :src="userAvatar"
+                            alt="Avatar"
+                            class="h-full w-full rounded-full object-cover"
+                        />
                     </a>
 
                     <div

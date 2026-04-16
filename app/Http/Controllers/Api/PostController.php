@@ -26,6 +26,7 @@ class PostController extends Controller
                 'thumbnailImage:id,product_id,image_url',
                 'seller:id,name,phone_number',
             ])
+            ->where('status', Post::STATUS_PUBLISHED)
             ->whereRelation('category.parentCategory', 'category_name', $type)
             ->when($request->filled('keyword'), function ($query) use ($request) {
                 $keyword = trim((string) $request->query('keyword'));

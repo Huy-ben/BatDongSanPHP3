@@ -1,4 +1,4 @@
-export function jam_read_num_forvietnamese(value = false, suffix = '') {
+export function jam_read_num_forvietnamese(value = 0, suffix = '') {
     const rawValue = String(value ?? '').trim();
 
     if (!rawValue) {

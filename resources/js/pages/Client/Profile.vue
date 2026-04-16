@@ -4,6 +4,7 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, ref } from 'vue';
+import { jam_read_num_forvietnamese } from '@/utils/money';
 
 const props = defineProps({
     profile: {
@@ -98,13 +99,7 @@ const packageAction = computed(() => {
     }
 });
 
-const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-        maximumFractionDigits: 0,
-    }).format(price || 0);
-};
+const formatPrice = (price) => jam_read_num_forvietnamese(Number(price || 0));
 
 const formatDate = (dateValue) => {
     if (!dateValue) {

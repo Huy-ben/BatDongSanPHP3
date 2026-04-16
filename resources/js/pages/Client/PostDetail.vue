@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ClientLayout from '@/layouts/ClientLayout.vue';
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { jam_read_num_forvietnamese } from '@/utils/money';
 
 declare global {
     interface Window {
@@ -113,7 +114,7 @@ const breadcrumbCategoryHref = computed(() => breadcrumbListingHref.value);
 
 const formattedPrice = computed(() => {
     const amount = Number(props.post?.price || 0);
-    return new Intl.NumberFormat('vi-VN').format(amount);
+    return jam_read_num_forvietnamese(amount);
 });
 
 const formattedArea = computed(() => {
@@ -134,7 +135,7 @@ const pricePerSquareMeter = computed(() => {
     }
 
     const value = Math.round(amount / area);
-    return `~${new Intl.NumberFormat('vi-VN').format(value)} đ/m²`;
+    return `~${jam_read_num_forvietnamese(value)}/m²`;
 });
 
 const displayPhone = computed(() => {
@@ -683,7 +684,7 @@ onUnmounted(() => {
                                     </div>
                                     <div class="p-3">
                                         <div class="text-brand text-sm font-bold">
-                                            {{ new Intl.NumberFormat('vi-VN').format(Number(item.price || 0)) }} đ
+                                            {{ jam_read_num_forvietnamese(Number(item.price || 0)) }}
                                         </div>
                                         <p class="mt-0.5 line-clamp-2 text-xs leading-snug text-gray-700">
                                             {{ item.title }}
@@ -733,7 +734,7 @@ onUnmounted(() => {
                                     </div>
                                     <div class="p-3">
                                         <div class="text-brand text-sm font-bold">
-                                            {{ new Intl.NumberFormat('vi-VN').format(Number(item.price || 0)) }} đ
+                                            {{ jam_read_num_forvietnamese(Number(item.price || 0)) }}
                                         </div>
                                         <p class="mt-0.5 line-clamp-2 text-xs leading-snug text-gray-700">
                                             {{ item.title }}

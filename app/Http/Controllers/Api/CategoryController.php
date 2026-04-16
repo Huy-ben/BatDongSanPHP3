@@ -9,8 +9,7 @@ class CategoryController extends Controller
 {
     public function index(){
             $categories = DB::table('categories')
-                ->whereNotNull('parent_id')
-                ->whereNotNull('image')
+                ->where('status', '1')
                 ->get();
             return response()->json($categories);
     }

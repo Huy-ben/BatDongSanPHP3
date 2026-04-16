@@ -440,9 +440,10 @@ function getCategoryFilterUrl(categoryName) {
                         ref="sliderRef"
                         class="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth md:gap-6"
                     >
-                        <div
+                        <a
                             v-for="project in projectPosts"
                             :key="project.id"
+                            :href="`/post-detail/${project.id}`"
                             data-card
                             class="group relative w-60 shrink-0 cursor-pointer snap-start sm:w-65 md:w-80"
                         >
@@ -489,7 +490,7 @@ function getCategoryFilterUrl(categoryName) {
                                     </p>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </section>
@@ -581,9 +582,10 @@ function getCategoryFilterUrl(categoryName) {
                         Tin tức thị trường
                     </h2>
                     <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
-                        <div
+                        <a
                             v-for="blog in blogs"
                             :key="blog.id"
+                            :href="`/blog-detail?id=${blog.id}`"
                             class="group flex cursor-pointer flex-col gap-6 border-b border-gray-100 pb-8 md:flex-row"
                         >
                             <div
@@ -616,7 +618,7 @@ function getCategoryFilterUrl(categoryName) {
                                     {{ formatDate(blog.created_at) }}
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </section>

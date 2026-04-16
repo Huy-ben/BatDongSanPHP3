@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -35,6 +36,34 @@ class User extends Authenticatable implements FilamentUser
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
+    protected function avatar(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value): ?string {
+                if (! $value) {
+                    return null;
+                }
+
+                $avatar = trim($value);
+
+                if ($avatar === '') {
+                    return null;
+                }
+
+                if (
+                    str_starts_with($avatar, 'http://') ||
+                    str_starts_with($avatar, 'https://') ||
+                    str_starts_with($avatar, '/storage/')
+                ) {
+                    return $avatar;
+                }
+
+                return '/storage/' . ltrim($avatar, '/');
+            }
+        );
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->role === '0';
