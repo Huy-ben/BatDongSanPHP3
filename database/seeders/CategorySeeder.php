@@ -111,5 +111,26 @@ class CategorySeeder extends Seeder
                 'updated_at' => $now,
             ]);
         }
+
+    // === BÀI VIẾT ===
+        $blogCategories = [
+            'Kinh nghiệm',
+            'Đầu tư',
+            'Thị trường',
+            'Phong thủy',
+            'Luật pháp',
+        ];
+
+        foreach ($blogCategories as $name) {
+            DB::table('categories')->insert([
+                'category_name' => $name,
+                'description' => 'Danh mục ' . $name,
+                'parent_id' => $postRootId,
+                'image' => null,
+                'status' => '1',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
     }
 }

@@ -3,6 +3,7 @@ import ClientLayout from '@/layouts/ClientLayout.vue';
 import { computed, onMounted, ref } from 'vue';
 
 const blog = ref(null);
+const allBlogs = ref([]);
 const latestBlogs = ref([]);
 const loading = ref(true);
 const error = ref('');
@@ -56,6 +57,18 @@ const contentParagraphs = computed(() => {
   return chunks.slice(0, 6);
 });
 
+const categoryStats = computed(() => {
+  const stats = allBlogs.value.reduce((acc, item) => {
+    const categoryName = item.category?.category_name || 'Chưa phân loại';
+    acc[categoryName] = (acc[categoryName] || 0) + 1;
+    return acc;
+  }, {});
+
+  return Object.entries(stats)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'vi'));
+});
+
 const fetchDetail = async () => {
   if (!blogId) {
     error.value = 'Thiếu mã bài viết.';
@@ -78,7 +91,8 @@ const fetchDetail = async () => {
 
     if (latestResponse.ok) {
       const latestPayload = await latestResponse.json();
-      latestBlogs.value = (Array.isArray(latestPayload) ? latestPayload : [])
+      allBlogs.value = Array.isArray(latestPayload) ? latestPayload : [];
+      latestBlogs.value = allBlogs.value
         .filter((item) => item.id !== detailPayload.id)
         .slice(0, 5);
     }
@@ -121,13 +135,14 @@ onMounted(() => {
             <article v-else-if="blog" class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <div class="border-b border-slate-100 px-5 py-5 sm:px-7">
                 <span class="mb-3 inline-flex rounded-full bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700">
-                  {{ blog.status === 'published' ? 'Đã xuất bản' : 'Bản nháp' }}
+                  {{ blog.category?.category_name || 'Chưa phân loại' }}
                 </span>
                 <h1 class="mb-4 text-2xl font-black leading-tight text-slate-900 sm:text-3xl">
                   {{ blog.title }}
                 </h1>
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
                   <span><i class="fa-regular fa-calendar mr-1"></i>{{ formatDate(blog.created_at) }}</span>
+                  <span><i class="fa-regular fa-folder mr-1"></i>{{ blog.category?.category_name || 'Chưa phân loại' }}</span>
                 </div>
               </div>
 
@@ -179,7 +194,7 @@ onMounted(() => {
                   :href="`/blog-detail?id=${item.id}`"
                   class="rounded-xl border border-slate-200 p-4 transition hover:-translate-y-0.5 hover:border-brand"
                 >
-                  <p class="mb-2 text-xs font-bold uppercase tracking-wide text-brand">Bài viết</p>
+                  <p class="mb-2 text-xs font-bold uppercase tracking-wide text-brand">{{ item.category?.category_name || 'Chưa phân loại' }}</p>
                   <h4 class="mb-2 line-clamp-2 text-sm font-bold leading-5 text-slate-900">{{ item.title }}</h4>
                   <p class="line-clamp-2 text-xs text-slate-500">{{ item.excerpt || 'Xem chi tiết nội dung bài viết.' }}</p>
                 </a>
@@ -215,6 +230,7 @@ onMounted(() => {
                   <div class="min-w-6 text-2xl font-extrabold leading-none text-slate-200">{{ String(index + 1).padStart(2, '0') }}</div>
                   <div>
                     <a :href="`/blog-detail?id=${item.id}`" class="line-clamp-2 text-xs font-semibold leading-5 text-slate-800 transition hover:text-brand">{{ item.title }}</a>
+                    <p class="text-[11px] text-orange-600">{{ item.category?.category_name || 'Chưa phân loại' }}</p>
                     <p class="text-xs text-slate-400">{{ formatDate(item.created_at) }}</p>
                   </div>
                 </div>
@@ -226,26 +242,14 @@ onMounted(() => {
                 <h3 class="inline-block border-b-2 border-brand pb-1 text-sm font-extrabold">Danh mục</h3>
               </div>
               <div class="space-y-1.5">
-                <button class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 transition hover:bg-orange-50">
-                  <span class="text-sm font-medium text-slate-700">Thị trường</span>
-                  <span class="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">48</span>
-                </button>
-                <button class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 transition hover:bg-orange-50">
-                  <span class="text-sm font-medium text-slate-700">Pháp lý</span>
-                  <span class="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">32</span>
-                </button>
-                <button class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 transition hover:bg-orange-50">
-                  <span class="text-sm font-medium text-slate-700">Đầu tư</span>
-                  <span class="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">27</span>
-                </button>
-                <button class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 transition hover:bg-orange-50">
-                  <span class="text-sm font-medium text-slate-700">Quy hoạch</span>
-                  <span class="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">19</span>
-                </button>
-                <button class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 transition hover:bg-orange-50">
-                  <span class="text-sm font-medium text-slate-700">Phong thủy</span>
-                  <span class="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">14</span>
-                </button>
+                <div
+                  v-for="category in categoryStats"
+                  :key="category.name"
+                  class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 transition hover:bg-orange-50"
+                >
+                  <span class="text-sm font-medium text-slate-700">{{ category.name }}</span>
+                  <span class="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">{{ category.count }}</span>
+                </div>
               </div>
             </section>
           </aside>

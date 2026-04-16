@@ -52,8 +52,9 @@ const filteredBlogs = computed(() => {
   return blogs.value.filter((item) => {
     const title = item.title?.toLowerCase() ?? '';
     const excerpt = item.excerpt?.toLowerCase() ?? '';
+    const categoryName = item.category?.category_name?.toLowerCase() ?? '';
 
-    return title.includes(normalizedKeyword) || excerpt.includes(normalizedKeyword);
+    return title.includes(normalizedKeyword) || excerpt.includes(normalizedKeyword) || categoryName.includes(normalizedKeyword);
   });
 });
 
@@ -66,12 +67,16 @@ const pagedBlogs = computed(() => {
 
 const latestBlogs = computed(() => blogs.value.slice(0, 5));
 
-const statusStats = computed(() => {
-  const total = blogs.value.length;
-  const published = blogs.value.filter((item) => item.status === 'published').length;
-  const draft = blogs.value.filter((item) => item.status === 'draft').length;
+const categoryStats = computed(() => {
+  const stats = blogs.value.reduce((acc, item) => {
+    const categoryName = item.category?.category_name || 'Chưa phân loại';
+    acc[categoryName] = (acc[categoryName] || 0) + 1;
+    return acc;
+  }, {});
 
-  return { total, published, draft };
+  return Object.entries(stats)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'vi'));
 });
 
 const pageNumbers = computed(() => Array.from({ length: totalPages.value }, (_, index) => index + 1));
@@ -159,7 +164,7 @@ onMounted(() => {
                 </div>
                 <div class="p-4">
                   <span class="mb-2 inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700">
-                    {{ blog.status === 'published' ? 'Đã xuất bản' : 'Bản nháp' }}
+                    {{ blog.category?.category_name || 'Chưa phân loại' }}
                   </span>
                   <h3 class="mb-2 line-clamp-2 text-sm font-bold leading-5">{{ blog.title }}</h3>
                   <p class="mb-3 line-clamp-2 text-xs leading-5 text-slate-500">{{ blog.excerpt || 'Chưa có mô tả ngắn cho bài viết này.' }}</p>
@@ -231,6 +236,7 @@ onMounted(() => {
                 </div>
                 <div>
                   <a :href="`/blog-detail?id=${blog.id}`" class="line-clamp-2 text-xs font-semibold leading-5 text-slate-800 transition hover:text-brand">{{ blog.title }}</a>
+                  <p class="text-[11px] text-orange-600">{{ blog.category?.category_name || 'Chưa phân loại' }}</p>
                   <p class="text-xs text-slate-400">{{ formatDate(blog.created_at) }}</p>
                 </div>
               </div>
@@ -242,9 +248,14 @@ onMounted(() => {
               <h3 class="inline-block border-b-2 border-brand pb-1 text-sm font-extrabold">Thống kê</h3>
             </div>
             <div class="space-y-1.5">
-              <div class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 transition hover:bg-orange-50"><span class="text-sm font-medium text-slate-700">Tổng bài viết</span><span class="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">{{ statusStats.total }}</span></div>
-              <div class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 transition hover:bg-orange-50"><span class="text-sm font-medium text-slate-700">Đã xuất bản</span><span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">{{ statusStats.published }}</span></div>
-              <div class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 transition hover:bg-orange-50"><span class="text-sm font-medium text-slate-700">Bản nháp</span><span class="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-700">{{ statusStats.draft }}</span></div>
+              <div
+                v-for="category in categoryStats"
+                :key="category.name"
+                class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 transition hover:bg-orange-50"
+              >
+                <span class="text-sm font-medium text-slate-700">{{ category.name }}</span>
+                  <span class="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">{{ category.count }}</span>
+              </div>
             </div>
           </section>
         </aside>

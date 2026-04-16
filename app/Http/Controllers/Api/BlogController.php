@@ -10,6 +10,7 @@ class BlogController extends Controller
     public function index()
     {
         $blogs = Blog::query()
+            ->with('category:id,category_name')
             ->where('status', 'published')
             ->latest()
             ->get();
@@ -22,6 +23,8 @@ class BlogController extends Controller
         if ($blog->status !== 'published') {
             abort(404);
         }
+
+        $blog->loadMissing('category:id,category_name');
 
         return response()->json($blog);
     }
