@@ -39,12 +39,12 @@ class ContactController extends Controller
             report($exception);
 
             return response()->json([
-                'message' => 'Cau hinh mail chua hop le hoac Gmail dang tu choi xac thuc. Hay kiem tra MAIL_USERNAME, MAIL_PASSWORD va MAIL_SCHEME.',
+                'message' => 'Cấu hình email chưa đúng hoặc có lỗi khi gửi email. Vui lòng thử lại sau.',
             ], 500);
         }
 
         return response()->json([
-            'message' => 'Yeu cau lien he da duoc gui thanh cong. Chung toi se phan hoi som nhat.',
+            'message' => 'Yêu cầu của bạn đã được gửi thành công. Chúng tôi sẽ liên hệ lại với bạn sớm nhất có thể.',
         ]);
     }
 }

@@ -18,7 +18,7 @@ class ContactFormMail extends Mailable
     public function build(): self
     {
         return $this
-            ->subject('Lien he moi: '.$this->contactData['subject'])
+            ->subject('Liên hệ mới: '.$this->contactData['subject'])
             ->view('emails.contact-form');
     }
 }
