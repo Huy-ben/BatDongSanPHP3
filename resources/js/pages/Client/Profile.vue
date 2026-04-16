@@ -99,6 +99,32 @@ const packageAction = computed(() => {
     }
 });
 
+function resolveImageUrl(imagePath) {
+    if (!imagePath) {
+        return '';
+    }
+
+    const normalizedPath = String(imagePath).trim();
+
+    if (!normalizedPath) {
+        return '';
+    }
+
+    if (/^(https?:)?\/\//i.test(normalizedPath) || normalizedPath.startsWith('data:')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('/storage/')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('storage/')) {
+        return `/${normalizedPath}`;
+    }
+
+    return `/storage/${normalizedPath.replace(/^\/+/, '')}`;
+}
+
 const formatPrice = (price) => jam_read_num_forvietnamese(Number(price || 0));
 
 const postStatusMeta = {
@@ -315,7 +341,7 @@ const goToPage = (page) => {
                                     >
                                         <i class="fa-solid fa-list"></i>
                                     </button>
-                                </div>
+                                </div>resolveImageUrl(post.thumbnail)
                             </div>
 
                             <div v-if="!props.hasActivePackage" class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
@@ -341,7 +367,7 @@ const goToPage = (page) => {
                                     <div :class="isGridView ? '' : 'flex flex-col sm:flex-row'">
                                         <div :class="isGridView ? 'h-44 w-full' : 'h-44 w-full sm:w-64'" class="overflow-hidden bg-slate-100">
                                             <img
-                                                :src="post.thumbnail || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'"
+                                                :src="resolveImageUrl(post.thumbnail) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'"
                                                 alt="thumbnail"
                                                 class="h-full w-full object-cover"
                                             />

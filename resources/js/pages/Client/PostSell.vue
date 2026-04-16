@@ -5,6 +5,33 @@ import { computed, onMounted, ref } from 'vue';
 import { jam_read_num_forvietnamese } from '@/utils/money';
 
 const posts = ref([]);
+
+function resolveImageUrl(imagePath) {
+    if (!imagePath) {
+        return '';
+    }
+
+    const normalizedPath = String(imagePath).trim();
+
+    if (!normalizedPath) {
+        return '';
+    }
+
+    if (/^(https?:)?\/\//i.test(normalizedPath) || normalizedPath.startsWith('data:')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('/storage/')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('storage/')) {
+        return `/${normalizedPath}`;
+    }
+
+    return `/storage/${normalizedPath.replace(/^\/+/, '')}`;
+}
+
 const blogs = ref([]);
 const categories = ref([]);
 const pagination = ref({
@@ -349,12 +376,8 @@ function goToPostDetail(postId) {
                 <div class="grid grid-cols-1 gap-8 lg:grid-cols-4">
                     <div class="lg:col-span-3">
                         <div class="mb-5 flex items-center justify-between border-b border-gray-200 pb-3">
-                            <h2 class="text-lg font-bold tracking-tight text-gray-900">
-                                Danh mục <span class="text-[#ff9c22]">Mua Bán</span>
-                            </h2>
-                            <span class="rounded-full bg-gray-100 px-3 py-1 text-[11px] font-semibold text-gray-600">
-                                {{ pagination.total }} Kết quả
-                            </span>
+                            <h2 class="text-xl font-extrabold tracking-tight text-gray-900 uppercase">Danh sách bất động sản</h2>
+                            <span class="text-sm text-gray-500">{{ pagination.total }} tin đăng</span>
                         </div>
 
                         <div v-if="posts.length === 0" class="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-sm text-gray-500">
@@ -374,13 +397,13 @@ function goToPostDetail(postId) {
                                 <div class="relative h-48 shrink-0 overflow-hidden bg-gray-100 md:w-72">
                                     <div class="grid h-full grid-cols-2 grid-rows-2 gap-0.5">
                                         <div class="col-span-2 row-span-1 overflow-hidden">
-                                            <img :src="post.img" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+                                            <img :src="resolveImageUrl(post.img)" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
                                         </div>
                                         <div class="overflow-hidden">
-                                            <img :src="post.img" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+                                            <img :src="resolveImageUrl(post.img)" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
                                         </div>
                                         <div class="relative overflow-hidden">
-                                            <img :src="post.img" class="h-full w-full object-cover opacity-60 transition duration-700 group-hover:scale-110" />
+                                            <img :src="resolveImageUrl(post.img)" class="h-full w-full object-cover opacity-60 transition duration-700 group-hover:scale-110" />
                                             <div class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs font-bold text-white">Ảnh đại diện</div>
                                         </div>
                                     </div>

@@ -5,6 +5,33 @@ import { computed, onMounted, ref } from 'vue';
 import { jam_read_num_forvietnamese } from '@/utils/money';
 
 const posts = ref([]);
+
+function resolveImageUrl(imagePath) {
+    if (!imagePath) {
+        return '';
+    }
+
+    const normalizedPath = String(imagePath).trim();
+
+    if (!normalizedPath) {
+        return '';
+    }
+
+    if (/^(https?:)?\/\//i.test(normalizedPath) || normalizedPath.startsWith('data:')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('/storage/')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('storage/')) {
+        return `/${normalizedPath}`;
+    }
+
+    return `/storage/${normalizedPath.replace(/^\/+/, '')}`;
+}
+
 const blogs = ref([]);
 const categories = ref([]);
 const pagination = ref({
@@ -384,7 +411,7 @@ function goToPostDetail(postId) {
                                     class="relative h-52 shrink-0 overflow-hidden md:w-80"
                                 >
                                     <img
-                                        :src="post.img"
+                                        :src="resolveImageUrl(post.img)"
                                         class="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                                     />
                                     <span

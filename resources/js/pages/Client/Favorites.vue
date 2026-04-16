@@ -6,6 +6,58 @@ import { Link } from '@inertiajs/vue3';
 import { jam_read_num_forvietnamese } from '@/utils/money';
 
 const favoritePosts = ref([]);
+
+function resolveImageUrl(imagePath) {
+    if (!imagePath) {
+        return '';
+    }
+
+    const normalizedPath = String(imagePath).trim();
+
+    if (!normalizedPath) {
+        return '';
+    }
+
+    if (/^(https?:)?\/\//i.test(normalizedPath) || normalizedPath.startsWith('data:')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('/storage/')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('storage/')) {
+        return `/${normalizedPath}`;
+    }
+
+    return `/storage/${normalizedPath.replace(/^\/+/, '')}`;
+}
+
+function resolveImageUrl(imagePath) {
+    if (!imagePath) {
+        return '';
+    }
+
+    const normalizedPath = String(imagePath).trim();
+
+    if (!normalizedPath) {
+        return '';
+    }
+
+    if (/^(https?:)?\/\//i.test(normalizedPath) || normalizedPath.startsWith('data:')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('/storage/')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('storage/')) {
+        return `/${normalizedPath}`;
+    }
+
+    return `/storage/${normalizedPath.replace(/^\/+/, '')}`;
+}
 const isLoading = ref(false);
 const activeListingType = ref('all');
 const searchKeyword = ref('');
@@ -211,7 +263,7 @@ function listingBadgeClass(type) {
                             href="/post-sell"
                             class="rounded-full bg-[#ff9c22] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
                         >
-                            Xem nhà đất bán
+                            Xem nhà đấresolveImageUrl(post.img)
                         </Link>
                         <Link
                             href="/post-rent"
@@ -237,7 +289,7 @@ function listingBadgeClass(type) {
                     >
                         <a :href="`/post-detail/${post.id}`" class="relative block h-52 shrink-0 overflow-hidden bg-gray-100 md:w-72">
                             <img
-                                :src="post.img"
+                                :src="resolveImageUrl(post.img)"
                                 :alt="post.title"
                                 class="h-full w-full object-cover transition duration-700 group-hover:scale-110"
                             />

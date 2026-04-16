@@ -71,7 +71,7 @@ const galleryImages = computed<GalleryImage[]>(() => {
     const images = props.post?.images
         ?.filter((item) => !!item)
         .map((src, index) => ({
-            src,
+            src: resolveImageUrl(src),
             label: `Hình ${index + 1}`,
         }));
 
@@ -95,6 +95,32 @@ const sellerAvatar = computed(() => {
     const encodedName = encodeURIComponent(sellerName.value || 'User');
     return `https://ui-avatars.com/api/?name=${encodedName}&background=F97316&color=fff&size=128`;
 });
+
+function resolveImageUrl(imagePath: string | any) {
+    if (!imagePath) {
+        return '';
+    }
+
+    const normalizedPath = String(imagePath).trim();
+
+    if (!normalizedPath) {
+        return '';
+    }
+
+    if (/^(https?:)?\/\//i.test(normalizedPath) || normalizedPath.startsWith('data:')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('/storage/')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('storage/')) {
+        return `/${normalizedPath}`;
+    }
+
+    return `/storage/${normalizedPath.replace(/^\/+/, '')}`;
+}
 
 const breadcrumbListingHref = computed(() => {
     const type = (props.post?.listing_type || '').toLowerCase();
@@ -673,7 +699,7 @@ onUnmounted(() => {
                                 >
                                     <div class="relative overflow-hidden">
                                         <img
-                                            :src="item.img || 'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=400&q=80'"
+                                            :src="resolveImageUrl(item.img) || 'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=400&q=80'"
                                             alt=""
                                             class="h-36 w-full object-cover transition duration-300 group-hover:scale-105"
                                         />
@@ -723,7 +749,7 @@ onUnmounted(() => {
                                 >
                                     <div class="relative overflow-hidden">
                                         <img
-                                            :src="item.img || 'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=400&q=80'"
+                                            :src="resolveImageUrl(item.img) || 'https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=400&q=80'"
                                             alt=""
                                             class="h-36 w-full object-cover transition duration-300 group-hover:scale-105"
                                         />
