@@ -4,9 +4,11 @@ namespace App\Filament\Resources\Posts\Schemas;
 
 use App\Models\Post;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Support\HtmlString;
 
 class PostsForm
 {
@@ -14,13 +16,15 @@ class PostsForm
     {
         return $schema
             ->schema([
-                TextInput::make('title')
+               TextInput::make('title')
                     ->label('Tiêu đề bài đăng')
+                    ->hiddenOn('edit')
                     ->required()
                     ->maxLength(255),
 
                 Select::make('seller_id')
                     ->label('Người bán')
+                    ->hiddenOn('edit')
                     ->relationship('seller', 'name')
                     ->searchable()
                     ->preload()
@@ -28,6 +32,7 @@ class PostsForm
 
                 Select::make('category_id')
                     ->label('Danh mục')
+                    ->hiddenOn('edit')
                     ->relationship('category', 'category_name')
                     ->searchable()
                     ->preload()
@@ -35,18 +40,21 @@ class PostsForm
 
                 TextInput::make('price')
                     ->label('Giá bán')
+                    ->hiddenOn('edit')
                     ->numeric()
                     ->required()
                     ->prefix('₫'),
 
                 TextInput::make('area')
                     ->label('Diện tích')
+                    ->hiddenOn('edit')
                     ->numeric()
                     ->required()
                     ->suffix('m²'),
 
                 TextInput::make('address')
                     ->label('Địa chỉ')
+                    ->hiddenOn('edit')
                     ->required()
                     ->maxLength(255),
 
@@ -63,6 +71,7 @@ class PostsForm
 
                 FileUpload::make('images')
                     ->label('Hình ảnh bài đăng')
+                    ->hiddenOn('edit')
                     ->image()
                     ->multiple()
                     ->reorderable()

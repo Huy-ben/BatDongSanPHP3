@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Posts\Pages;
 
 use App\Filament\Resources\Posts\PostsResource;
 use App\Models\Post;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Pages\EditRecord;
@@ -14,12 +15,13 @@ class EditPosts extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        $imageUrls = $data['images'] ?? [];
+        $hasImagesInput = array_key_exists('images', $data);
+        $imageUrls = array_values(array_filter(is_array($data['images'] ?? null) ? $data['images'] : []));
         unset($data['images']);
 
         $record->update($data);
 
-        if (is_array($imageUrls)) {
+        if ($hasImagesInput && count($imageUrls) > 0) {
             /** @var Post $record */
             $record->syncImages($imageUrls);
         }
@@ -30,6 +32,11 @@ class EditPosts extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('previewClient')
+                ->label('Xem trước như client')
+                ->icon('heroicon-o-eye')
+                ->url(fn () => route('post-detail', ['postIdentifier' => $this->record->id]))
+                ->openUrlInNewTab(),
             DeleteAction::make(),
         ];
     }

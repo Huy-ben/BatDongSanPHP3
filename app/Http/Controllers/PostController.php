@@ -322,13 +322,17 @@ class PostController extends Controller
             ]);
 
         if ($postIdentifier !== null) {
-            $postQuery->where(function ($query) use ($request) {
-                $query->where('status', Post::STATUS_PUBLISHED);
+            $isAdmin = $request->user()?->role === '0';
 
-                if ($request->user()) {
-                    $query->orWhere('seller_id', $request->user()->id);
-                }
-            });
+            if (! $isAdmin) {
+                $postQuery->where(function ($query) use ($request) {
+                    $query->where('status', Post::STATUS_PUBLISHED);
+
+                    if ($request->user()) {
+                        $query->orWhere('seller_id', $request->user()->id);
+                    }
+                });
+            }
 
             $postQuery->where(function ($query) use ($postIdentifier) {
                 if (ctype_digit($postIdentifier)) {
