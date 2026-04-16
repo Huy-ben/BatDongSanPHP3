@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Posts\Tables;
 
+use App\Models\Notification;
 use App\Models\Post;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -13,7 +14,6 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\DB;
 
 class PostsTable
 {
@@ -94,7 +94,11 @@ class PostsTable
                     ->color('success')
                     ->requiresConfirmation()
                     ->visible(fn (Post $record): bool => $record->status === Post::STATUS_WAITING)
-                    ->action(fn (Post $record) => $record->update(['status' => Post::STATUS_PUBLISHED])),
+                    ->action(function (Post $record): void {
+                        $record->update(['status' => Post::STATUS_PUBLISHED]);
+
+                        self::createPostApprovalNotification($record);
+                    }),
                 Action::make('reject')
                     ->label('Từ chối')
                     ->icon('heroicon-o-x-circle')
@@ -110,14 +114,7 @@ class PostsTable
                     ->action(function (Post $record, array $data): void {
                         $record->update(['status' => Post::STATUS_REJECTED]);
 
-                        DB::table('notifications')->insert([
-                            'user_id' => $record->seller_id,
-                            'title' => 'Bài đăng bị từ chối',
-                            'content' => "Bài đăng '{$record->title}' đã bị từ chối. Lý do: {$data['reject_reason']}",
-                            'is_read' => false,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
+                        self::createPostRejectionNotification($record, (string) $data['reject_reason']);
                     }),
                 Action::make('markWaiting')
                     ->label('Chờ duyệt')
@@ -135,7 +132,13 @@ class PostsTable
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->action(fn ($records) => $records->each(fn (Post $record) => $record->update(['status' => Post::STATUS_PUBLISHED]))),
+                        ->action(function ($records): void {
+                            $records->each(function (Post $record): void {
+                                $record->update(['status' => Post::STATUS_PUBLISHED]);
+
+                                self::createPostApprovalNotification($record);
+                            });
+                        }),
                     BulkAction::make('rejectSelected')
                         ->label('Từ chối đã chọn')
                         ->icon('heroicon-o-x-circle')
@@ -148,19 +151,10 @@ class PostsTable
                                 ->maxLength(1000),
                         ])
                         ->action(function ($records, array $data): void {
-                            $now = now();
-
-                            $records->each(function (Post $record) use ($data, $now): void {
+                            $records->each(function (Post $record) use ($data): void {
                                 $record->update(['status' => Post::STATUS_REJECTED]);
 
-                                DB::table('notifications')->insert([
-                                    'user_id' => $record->seller_id,
-                                    'title' => 'Bài đăng bị từ chối',
-                                    'content' => "Bài đăng '{$record->title}' đã bị từ chối. Lý do: {$data['reject_reason']}",
-                                    'is_read' => false,
-                                    'created_at' => $now,
-                                    'updated_at' => $now,
-                                ]);
+                                self::createPostRejectionNotification($record, (string) $data['reject_reason']);
                             });
                         }),
                     BulkAction::make('markWaitingSelected')
@@ -172,5 +166,25 @@ class PostsTable
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    private static function createPostApprovalNotification(Post $post): void
+    {
+        Notification::query()->create([
+            'user_id' => $post->seller_id,
+            'title' => 'Bài đăng đã được duyệt',
+            'content' => "Bài đăng '{$post->title}' đã được duyệt và đang hiển thị công khai.",
+            'is_read' => false,
+        ]);
+    }
+
+    private static function createPostRejectionNotification(Post $post, string $reason): void
+    {
+        Notification::query()->create([
+            'user_id' => $post->seller_id,
+            'title' => 'Bài đăng bị từ chối',
+            'content' => "Bài đăng '{$post->title}' đã bị từ chối. Lý do: {$reason}",
+            'is_read' => false,
+        ]);
     }
 }

@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { clearAuthToken } from '@/lib/authToken'
-import Label from '../ui/label/Label.vue'
 
 const navItems = [
     { label: 'Trang chủ', link: '/', match: 'exact' as const },
@@ -44,11 +43,66 @@ const menuItems = computed(() => {
 
 const authUser = computed(() => page.props.auth?.user)
 const isAuthenticated = computed(() => Boolean(authUser.value))
+const headerNotifications = ref<Array<{
+    id: number
+    title: string
+    content: string
+    is_read: boolean
+    created_at: string
+}>>([])
+const isLoadingNotifications = ref(false)
 
 const userInitial = computed(() => {
     const name = authUser.value?.name
     return name?.charAt(0).toUpperCase() ?? 'B'
 })
+
+const unreadNotificationCount = computed(() => {
+    return headerNotifications.value.filter((item) => !item.is_read).length
+})
+
+const previewNotifications = computed(() => {
+    return headerNotifications.value.slice(0, 5)
+})
+
+const unreadBadge = computed(() => {
+    if (unreadNotificationCount.value <= 0) {
+        return ''
+    }
+
+    return unreadNotificationCount.value > 99 ? '99+' : String(unreadNotificationCount.value)
+})
+
+const formatNotificationTime = (value: string) => {
+    if (!value) {
+        return ''
+    }
+
+    return new Intl.DateTimeFormat('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        day: '2-digit',
+        month: '2-digit',
+    }).format(new Date(value))
+}
+
+const fetchHeaderNotifications = async () => {
+    if (!isAuthenticated.value) {
+        headerNotifications.value = []
+        return
+    }
+
+    isLoadingNotifications.value = true
+
+    try {
+        const response = await axios.get('/notifications/data')
+        headerNotifications.value = Array.isArray(response.data) ? response.data : []
+    } catch {
+        headerNotifications.value = []
+    } finally {
+        isLoadingNotifications.value = false
+    }
+}
 
 const handleLogout = async () => {
     try {
@@ -60,6 +114,17 @@ const handleLogout = async () => {
     clearAuthToken()
     router.post('/logout')
 }
+
+onMounted(() => {
+    fetchHeaderNotifications()
+})
+
+watch(
+    () => authUser.value?.id,
+    () => {
+        fetchHeaderNotifications()
+    }
+)
 </script>
 
 <template>
@@ -89,7 +154,7 @@ const handleLogout = async () => {
 
                 <Link
                     href="/favorites"
-                    class="rounded-full p-2 text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900"
+                    class="rounded-full p-2 text-zinc-700 transition hover:text-[#B76300]"
                     aria-label="Yêu thích"
                 >
                     <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -97,18 +162,59 @@ const handleLogout = async () => {
                     </svg>
                 </Link>
 
-                <button
-                    type="button"
-                    class="relative rounded-full p-2 text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-900"
-                    aria-label="Thông báo"
-                >
-                    <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 17H16M9 20H15M17 10.5C17 8 15 6 12.5 6H11.5C9 6 7 8 7 10.5V14L5.5 16H18.5L17 14V10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <span class="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF9C22] px-1 text-xs font-bold leading-none text-white">
-                        1
-                    </span>
-                </button>
+                <div class="group relative">
+                    <Link
+                        href="/notifications"
+                        class="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-zinc-700 transition hover:text-[#B76300]"
+                        aria-label="Thông báo"
+                    >
+                        <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 17H16M9 20H15M17 10.5C17 8 15 6 12.5 6H11.5C9 6 7 8 7 10.5V14L5.5 16H18.5L17 14V10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span
+                            v-if="unreadNotificationCount > 0"
+                            class="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF9C22] px-1 text-xs font-bold leading-none text-white"
+                        >
+                            {{ unreadBadge }}
+                        </span>
+                    </Link>
+
+                    <div
+                        v-if="isAuthenticated"
+                        class="invisible pointer-events-none absolute right-0 top-[calc(100%-6px)] z-30 w-96 overflow-hidden rounded-xl border border-zinc-200 bg-white p-3 opacity-0 shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition-all duration-200 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100"
+                    >
+                        <div class="mb-2 flex items-center justify-between border-b border-zinc-200 pb-2">
+                            <p class="text-sm font-bold text-zinc-900">Thông báo</p>
+                            <Link href="/notifications" class="text-xs font-semibold text-[#B76300] hover:text-[#FF9C22]">Xem tất cả</Link>
+                        </div>
+
+                        <div v-if="isLoadingNotifications" class="py-6 text-center text-xs text-zinc-500">
+                            Đang tải thông báo...
+                        </div>
+
+                        <div v-else-if="previewNotifications.length === 0" class="py-6 text-center text-xs text-zinc-500">
+                            Bạn chưa có thông báo nào.
+                        </div>
+
+                        <div v-else class="notification-scroll max-h-80 space-y-2 overflow-y-auto pr-1">
+                            <Link
+                                v-for="item in previewNotifications"
+                                :key="item.id"
+                                href="/notifications"
+                                class="block rounded-lg border px-3 py-2 transition"
+                                :class="item.is_read ? 'border-zinc-200 bg-white hover:border-zinc-300' : 'border-orange-200 bg-orange-50/50 hover:border-orange-300'"
+                            >
+                                <div class="flex items-start justify-between gap-2">
+                                    <p class="line-clamp-1 text-sm font-semibold text-zinc-900">{{ item.title }}</p>
+                                    <span v-if="!item.is_read" class="mt-1 h-2 w-2 rounded-full bg-[#FF9C22]"></span>
+                                </div>
+                                <p class="mt-0.5 line-clamp-2 text-xs text-zinc-600">{{ item.content }}</p>
+                                <p class="mt-1 text-[11px] text-zinc-400">{{ formatNotificationTime(item.created_at) }}</p>
+                            </Link>
+                        </div>
+                    </div>
+
+                </div>
 
                 <div v-if="isAuthenticated" class="group relative">
                     <a
@@ -224,12 +330,18 @@ const handleLogout = async () => {
                 >
                     Yêu thích
                 </Link>
-                <button
-                    type="button"
-                    class="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-[#FF9C22] hover:text-[#B76300]"
+                <Link
+                    href="/notifications"
+                    class="relative rounded-lg border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-[#FF9C22] hover:text-[#B76300]"
                 >
                     Thông báo
-                </button>
+                    <span
+                        v-if="unreadNotificationCount > 0"
+                        class="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-[#FF9C22] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
+                    >
+                        {{ unreadBadge }}
+                    </span>
+                </Link>
                 <template v-if="isAuthenticated">
                     <a
                         class="col-span-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:border-[#FF9C22] hover:text-[#B76300]"
@@ -272,5 +384,13 @@ const handleLogout = async () => {
 </template>
 
 <style scoped>
+.notification-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
 
+.notification-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
 </style>

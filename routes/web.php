@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\Auth\GoogleLoginController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PaymentController;
@@ -41,6 +42,10 @@ Route::inertia('about-us', 'Client/AboutUs')->name('about-us');
 Route::get('contact', [ContactController::class, 'index'])->name('contact');
 Route::middleware(['auth'])->group(function () {
     Route::inertia('favorites', 'Client/Favorites')->name('favorites');
+    Route::inertia('notifications', 'Client/Notification')->name('notifications');
+    Route::get('notifications/data', [NotificationController::class, 'index'])->name('notifications.data');
+    Route::patch('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::get('favorites/data', [FavoriteController::class, 'index'])->name('favorites.data');
     Route::get('favorites/ids', [FavoriteController::class, 'ids'])->name('favorites.ids');
     Route::post('favorites', [FavoriteController::class, 'store'])->name('favorites.store');

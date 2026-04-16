@@ -21,9 +21,38 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    renew: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const isSuccess = computed(() => props.status === 'success');
+const isRenew = computed(() => props.renew === true);
+
+const resultTitle = computed(() => {
+    if (isSuccess.value) {
+        return isRenew.value ? 'Gia hạn thành công' : 'Thanh toán thành công';
+    }
+
+    return isRenew.value ? 'Gia hạn chưa thành công' : 'Thanh toán chưa thành công';
+});
+
+const successMessage = computed(() => {
+    if (isRenew.value) {
+        return `Bạn đã gia hạn thành công gói ${planLabel.value}. Thời hạn sử dụng đã được cộng thêm theo chu kỳ.`;
+    }
+
+    return `Bạn đã kích hoạt gói ${planLabel.value}. Hệ thống đã ghi nhận giao dịch và cập nhật quyền đăng tin.`;
+});
+
+const retryUrl = computed(() => {
+    if (!props.plan) {
+        return '/thanh-toan';
+    }
+
+    return isRenew.value ? `/thanh-toan?plan=${props.plan}&renew=1` : `/thanh-toan?plan=${props.plan}`;
+});
 
 const planLabel = computed(() => {
     const map = {
@@ -72,12 +101,12 @@ onMounted(() => {
                     </div>
 
                     <h1 class="mt-5 text-center text-2xl font-black sm:text-3xl">
-                        {{ isSuccess ? 'Thanh toán thành công' : 'Thanh toán chưa thành công' }}
+                        {{ resultTitle }}
                     </h1>
 
                     <p class="mx-auto mt-3 max-w-xl text-center text-sm text-slate-600 sm:text-base">
                         <span v-if="isSuccess">
-                            Bạn đã kích hoạt gói <strong>{{ planLabel }}</strong>. Hệ thống đã ghi nhận giao dịch và cập nhật quyền đăng tin.
+                            {{ successMessage }}
                         </span>
                         <span v-else>
                             {{ failureMessage }}
@@ -104,10 +133,10 @@ onMounted(() => {
                         </Link>
                         <Link
                             v-if="!isSuccess"
-                            :href="`/thanh-toan${props.plan ? `?plan=${props.plan}` : ''}`"
+                            :href="retryUrl"
                             class="rounded-xl bg-[#0A61C8] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#084D9D]"
                         >
-                            Thử thanh toán lại
+                            {{ isRenew ? 'Thử gia hạn lại' : 'Thử thanh toán lại' }}
                         </Link>
                         <Link
                             v-else

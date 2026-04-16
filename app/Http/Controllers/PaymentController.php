@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ListingPackage;
+use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -69,6 +70,7 @@ class PaymentController extends Controller
                     'status' => 'failed',
                     'reason' => 'renew_invalid',
                     'plan' => $validated['plan'],
+                    'renew' => true,
                 ]);
             }
         }
@@ -126,6 +128,7 @@ class PaymentController extends Controller
                 'status' => 'failed',
                 'reason' => 'trial_exists',
                 'plan' => 'trial',
+                'renew' => false,
             ]);
         }
 
@@ -143,6 +146,7 @@ class PaymentController extends Controller
         return $this->redirectWithResult($request, [
             'status' => 'success',
             'plan' => 'trial',
+            'renew' => false,
         ]);
     }
 
@@ -201,6 +205,7 @@ class PaymentController extends Controller
                 'reason' => 'amount',
                 'plan' => $pending['plan'],
                 'txnRef' => $txnRef,
+                'renew' => (bool) ($pending['renew'] ?? false),
             ]);
         }
 
@@ -212,6 +217,7 @@ class PaymentController extends Controller
                 'reason' => 'payment',
                 'plan' => $pending['plan'],
                 'txnRef' => $txnRef,
+                'renew' => (bool) ($pending['renew'] ?? false),
             ]);
         }
 
@@ -244,6 +250,7 @@ class PaymentController extends Controller
                         'reason' => 'renew_invalid',
                         'plan' => $pending['plan'],
                         'txnRef' => $txnRef,
+                        'renew' => true,
                     ]);
                 }
 
@@ -262,6 +269,13 @@ class PaymentController extends Controller
                     'status' => '1',
                     'is_featured' => true,
                 ]);
+
+                $this->createPackagePaymentNotification(
+                    (int) $pending['user_id'],
+                    (string) $package['name'],
+                    $txnRef,
+                    true
+                );
             } else {
                 ListingPackage::create([
                     'user_id' => $pending['user_id'],
@@ -273,6 +287,13 @@ class PaymentController extends Controller
                     'status' => '1',
                     'is_featured' => true,
                 ]);
+
+                $this->createPackagePaymentNotification(
+                    (int) $pending['user_id'],
+                    (string) $package['name'],
+                    $txnRef,
+                    false
+                );
             }
         } catch (\Throwable $exception) {
             Log::error('VNPay callback save package failed', [
@@ -288,6 +309,7 @@ class PaymentController extends Controller
                 'reason' => 'save',
                 'plan' => $pending['plan'],
                 'txnRef' => $txnRef,
+                'renew' => (bool) ($pending['renew'] ?? false),
             ]);
         }
 
@@ -297,6 +319,7 @@ class PaymentController extends Controller
             'status' => 'success',
             'plan' => $pending['plan'],
             'txnRef' => $txnRef,
+            'renew' => (bool) ($pending['renew'] ?? false),
         ]);
     }
 
@@ -325,8 +348,27 @@ class PaymentController extends Controller
             'reason' => $payload['reason'] ?? '',
             'plan' => $payload['plan'] ?? '',
             'txnRef' => $payload['txnRef'] ?? '',
+            'renew' => (bool) ($payload['renew'] ?? false),
         ]);
 
         return redirect()->route('payment.result');
+    }
+
+    private function createPackagePaymentNotification(int $userId, string $packageName, string $txnRef, bool $isRenew): void
+    {
+        $title = $isRenew
+            ? 'Gia hạn gói '.$packageName.' thành công'
+            : 'Bạn đã trở thành '.$packageName;
+
+        $content = $isRenew
+            ? 'Bạn đã gia hạn thành công gói '.$packageName.'. Mã giao dịch: '.$txnRef.'.'
+            : 'Thanh toán thành công. Tài khoản của bạn đã được nâng cấp lên '.$packageName.'. Mã giao dịch: '.$txnRef.'.';
+
+        Notification::query()->create([
+            'user_id' => $userId,
+            'title' => $title,
+            'content' => $content,
+            'is_read' => false,
+        ]);
     }
 }
