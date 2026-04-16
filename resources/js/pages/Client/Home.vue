@@ -12,6 +12,32 @@ const allCategories = ref([]);
 const page = usePage();
 const isAuthenticated = computed(() => Boolean(page.props.auth?.user));
 
+function resolveImageUrl(imagePath) {
+    if (!imagePath) {
+        return '';
+    }
+
+    const normalizedPath = String(imagePath).trim();
+
+    if (!normalizedPath) {
+        return '';
+    }
+
+    if (/^(https?:)?\/\//i.test(normalizedPath) || normalizedPath.startsWith('data:')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('/storage/')) {
+        return normalizedPath;
+    }
+
+    if (normalizedPath.startsWith('storage/')) {
+        return `/${normalizedPath}`;
+    }
+
+    return `/storage/${normalizedPath.replace(/^\/+/, '')}`;
+}
+
 onMounted(() => {
     fetchHomeData();
     fetchCategories();
@@ -396,7 +422,7 @@ function getCategoryFilterUrl(categoryName) {
                         >
                             <div class="relative h-28 overflow-hidden">
                                 <img
-                                    :src="category.image"
+                                    :src="resolveImageUrl(category.image)"
                                     :alt="category.category_name"
                                     class="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                                 />
@@ -451,7 +477,7 @@ function getCategoryFilterUrl(categoryName) {
                                 class="h-85 overflow-hidden rounded-3xl shadow-lg sm:h-90 md:h-105"
                             >
                                 <img
-                                    :src="project.img"
+                                    :src="resolveImageUrl(project.img)"
                                     class="h-full w-full object-cover transition duration-700 group-hover:scale-110"
                                     :alt="project.title"
                                 />
@@ -512,7 +538,7 @@ function getCategoryFilterUrl(categoryName) {
                         <a :href="`/post-detail/${post.id}`">
                             <div class="relative h-48 overflow-hidden md:h-52">
                                 <img
-                                    :src="post.img"
+                                    :src="resolveImageUrl(post.img)"
                                     class="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                                     :alt="post.title"
                                 />
@@ -592,7 +618,7 @@ function getCategoryFilterUrl(categoryName) {
                                 class="h-40 w-full overflow-hidden rounded-2xl md:w-56"
                             >
                                 <img
-                                    :src="blog.image"
+                                    :src="resolveImageUrl(blog.image)"
                                     class="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                                     :alt="blog.title"
                                 />

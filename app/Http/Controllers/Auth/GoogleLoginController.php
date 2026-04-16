@@ -23,7 +23,7 @@ class GoogleLoginController extends Controller
 
         if ($googleClientId === '') {
             throw ValidationException::withMessages([
-                'google' => 'Chua cau hinh GOOGLE_CLIENT_ID tren server.',
+                'google' => 'Chưa cấu hình GOOGLE_CLIENT_ID trên máy chủ.',
             ]);
         }
 
@@ -33,7 +33,7 @@ class GoogleLoginController extends Controller
 
         if (! $tokenInfoResponse->ok()) {
             throw ValidationException::withMessages([
-                'google' => 'Khong the xac thuc tai khoan Google. Vui long thu lai.',
+                'google' => 'Không thể xác thực tài khoản Google. Vui lòng thử lại.',
             ]);
         }
 
@@ -41,13 +41,13 @@ class GoogleLoginController extends Controller
 
         if (($tokenInfo['aud'] ?? null) !== $googleClientId) {
             throw ValidationException::withMessages([
-                'google' => 'Google Client ID khong hop le.',
+                'google' => 'Google Client ID không hợp lệ.',
             ]);
         }
 
         if (($tokenInfo['email_verified'] ?? 'false') !== 'true') {
             throw ValidationException::withMessages([
-                'google' => 'Email Google chua duoc xac minh.',
+                'google' => 'Email Google chưa được xác minh.',
             ]);
         }
 
@@ -55,7 +55,7 @@ class GoogleLoginController extends Controller
 
         if (! is_string($email) || $email === '') {
             throw ValidationException::withMessages([
-                'google' => 'Khong lay duoc email tu Google.',
+                'google' => 'Không lấy được email từ Google.',
             ]);
         }
 

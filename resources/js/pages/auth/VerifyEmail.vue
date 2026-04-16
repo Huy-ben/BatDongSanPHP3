@@ -19,18 +19,22 @@ defineProps<{
     >
         <Head title="Xác minh email" />
 
-        <div class="mb-5 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
-            <p class="text-[11px] font-semibold tracking-[0.18em] text-orange-600 uppercase">
+        <div class="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 via-orange-400 to-amber-300 p-6 text-white shadow-lg">
+            <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl"></div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-50/90">
                 Kích hoạt tài khoản
             </p>
-            <p class="mt-1 text-sm text-zinc-700">
-                Kiểm tra email để hoàn tất đăng ký và sử dụng đầy đủ tính năng.
+            <h2 class="mt-2 text-2xl font-semibold leading-tight">
+                Xác minh email để mở khóa toàn bộ tính năng
+            </h2>
+            <p class="mt-3 max-w-sm text-sm leading-6 text-orange-50">
+                Một email xác minh đã được gửi đến hộp thư của bạn. Vui lòng mở email và nhấn liên kết bên trong để hoàn tất.
             </p>
         </div>
 
         <div
             v-if="status === 'verification-link-sent'"
-            class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"
+            class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"
         >
             Liên kết xác minh mới đã được gửi đến email bạn đã đăng ký.
         </div>
@@ -48,7 +52,7 @@ defineProps<{
                 Gửi lại email xác minh
             </Button>
 
-            <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
+            <div class="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
                 Không phải tài khoản của bạn?
                 <TextLink
                     :href="logout()"

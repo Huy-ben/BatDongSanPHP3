@@ -64,7 +64,7 @@ const handleGoogleCredentialResponse = (response: GoogleCredentialResponse): voi
     const credential = response.credential;
 
     if (!credential) {
-        googleError.value = 'Khong nhan duoc ma xac thuc tu Google. Vui long thu lai.';
+        googleError.value = 'Không nhận được mã xác thực từ Google. Vui lòng thử lại.';
         return;
     }
 
@@ -76,7 +76,7 @@ const handleGoogleCredentialResponse = (response: GoogleCredentialResponse): voi
         {
             preserveScroll: true,
             onError: (errors) => {
-                googleError.value = (errors.google as string | undefined) ?? 'Dang nhap Google that bai. Vui long thu lai.';
+                googleError.value = (errors.google as string | undefined) ?? 'Đăng nhập Google thất bại. Vui lòng thử lại.';
             },
         }
     );
@@ -87,7 +87,7 @@ const initGoogleSignIn = (): void => {
     const googleAccount = window.google?.accounts?.id;
 
     if (!clientId) {
-        googleError.value = 'Chua cau hinh VITE_GOOGLE_CLIENT_ID.';
+        googleError.value = 'Chưa cấu hình VITE_GOOGLE_CLIENT_ID.';
         return;
     }
 
@@ -226,7 +226,7 @@ onMounted(() => {
                         <span class="w-full border-t border-zinc-200"></span>
                     </div>
                     <div class="relative flex justify-center text-xs uppercase">
-                        <span class="bg-white px-3 font-semibold tracking-wide text-zinc-400">Hoac</span>
+                        <span class="bg-white px-3 font-semibold tracking-wide text-zinc-400">Hoặc</span>
                     </div>
                 </div>
 
