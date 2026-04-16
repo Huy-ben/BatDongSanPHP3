@@ -58,7 +58,7 @@ class PostController extends Controller
             ->map(function (Image $image): array {
                 return [
                     'id' => $image->id,
-                    'image_url' => $image->image_url,
+                    'image_url' => $this->toPublicImageUrl($image->image_url),
                     'is_thumbnail' => (bool) $image->is_thumbnail,
                 ];
             })
@@ -66,10 +66,46 @@ class PostController extends Controller
             ->all();
     }
 
+    private function toPublicImageUrl(?string $path): string
+    {
+        $value = trim((string) $path);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (
+            str_starts_with($value, 'http://')
+            || str_starts_with($value, 'https://')
+            || str_starts_with($value, 'data:')
+        ) {
+            return $value;
+        }
+
+        if (str_starts_with($value, '/storage/')) {
+            return $value;
+        }
+
+        if (str_starts_with($value, 'storage/')) {
+            return '/'.$value;
+        }
+
+        if (str_starts_with($value, '/')) {
+            return $value;
+        }
+
+        return '/storage/'.$value;
+    }
+
     private function replacePostImages(Post $post, array $imageFiles, int $thumbnailIndex = 0): void
     {
         $post->images()->get()->each(function (Image $image): void {
-            $path = str_replace('/storage/', '', $image->image_url);
+            $path = ltrim((string) $image->image_url, '/');
+
+            if (str_starts_with($path, 'storage/')) {
+                $path = substr($path, strlen('storage/'));
+            }
+
             Storage::disk('public')->delete($path);
             $image->delete();
         });
@@ -81,7 +117,7 @@ class PostController extends Controller
 
             Image::create([
                 'product_id' => $post->id,
-                'image_url' => '/storage/'.$path,
+                'image_url' => $path,
                 'is_thumbnail' => $index === $thumbnailIndex,
             ]);
         }
@@ -195,7 +231,7 @@ class PostController extends Controller
 
             Image::create([
                 'product_id' => $post->id,
-                'image_url' => '/storage/'.$path,
+                'image_url' => $path,
                 'is_thumbnail' => $index === $thumbnailIndex,
             ]);
         }
@@ -379,7 +415,7 @@ class PostController extends Controller
                 'title' => $item->title,
                 'price' => $item->price,
                 'address' => $item->address,
-                'img' => $item->thumbnailImage?->image_url ?? '',
+                'img' => $this->toPublicImageUrl($item->thumbnailImage?->image_url),
             ])
             ->values()
             ->all();
@@ -408,7 +444,7 @@ class PostController extends Controller
                 'title' => $item->title,
                 'price' => $item->price,
                 'address' => $item->address,
-                'img' => $item->thumbnailImage?->image_url ?? '',
+                'img' => $this->toPublicImageUrl($item->thumbnailImage?->image_url),
                 'category_name' => $item->category?->category_name ?? '',
                 'listing_type' => $item->category?->parentCategory?->category_name ?? '',
                 'seller_name' => $item->seller?->name ?? '',
@@ -434,7 +470,7 @@ class PostController extends Controller
                 'images' => $post->images
                     ->sortByDesc(fn (Image $image) => (int) $image->is_thumbnail)
                     ->values()
-                    ->map(fn (Image $image) => $image->image_url)
+                    ->map(fn (Image $image) => $this->toPublicImageUrl($image->image_url))
                     ->all(),
                 'seller_name' => $post->seller?->name ?? 'Chính chủ',
                 'seller_phone' => $post->seller?->phone_number ?? '',
