@@ -37,7 +37,7 @@ class ProfileController extends Controller
             $posts = Post::query()
                 ->with('thumbnailImage')
                 ->where('seller_id', $user->id)
-                ->where('status', Post::STATUS_PUBLISHED)
+                ->whereIn('status', Post::STATUSES)
                 ->latest()
                 ->paginate(12, ['*'], 'page', $page);
 

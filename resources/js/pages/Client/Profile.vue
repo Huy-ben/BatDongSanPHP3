@@ -101,6 +101,33 @@ const packageAction = computed(() => {
 
 const formatPrice = (price) => jam_read_num_forvietnamese(Number(price || 0));
 
+const postStatusMeta = {
+    published: {
+        label: 'Đang hiển thị',
+        className: 'bg-emerald-100 text-emerald-700',
+    },
+    waiting: {
+        label: 'Chờ duyệt',
+        className: 'bg-amber-100 text-amber-700',
+    },
+    draft: {
+        label: 'Nháp',
+        className: 'bg-slate-100 text-slate-600',
+    },
+    rejected: {
+        label: 'Từ chối',
+        className: 'bg-rose-100 text-rose-700',
+    },
+};
+
+const getPostStatusLabel = (status) => {
+    return postStatusMeta[status]?.label || 'Không xác định';
+};
+
+const getPostStatusClass = (status) => {
+    return postStatusMeta[status]?.className || 'bg-slate-100 text-slate-600';
+};
+
 const formatDate = (dateValue) => {
     if (!dateValue) {
         return 'Chưa cập nhật';
@@ -325,9 +352,9 @@ const goToPage = (page) => {
                                                     <p class="text-lg font-black text-orange-600">{{ formatPrice(post.price) }}</p>
                                                     <span
                                                         class="rounded-full px-2.5 py-1 text-xs font-semibold"
-                                                        :class="post.status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'"
+                                                        :class="getPostStatusClass(post.status)"
                                                     >
-                                                        {{ post.status ? 'Đang hiển thị' : 'Đang ẩn' }}
+                                                        {{ getPostStatusLabel(post.status) }}
                                                     </span>
                                                 </div>
                                                 <h4 class="mt-2 line-clamp-2 text-sm font-bold text-slate-900">{{ post.title }}</h4>
