@@ -664,12 +664,6 @@ onUnmounted(() => {
                                 </div>
                                 <div class="text-center">
                                     <div class="font-semibold text-gray-800">
-                                        {{ expiryDate }}
-                                    </div>
-                                    <div class="text-gray-400">Hết hạn</div>
-                                </div>
-                                <div class="text-center">
-                                    <div class="font-semibold text-gray-800">
                                         {{ listingType }}
                                     </div>
                                     <div class="text-gray-400">Loại tin</div>

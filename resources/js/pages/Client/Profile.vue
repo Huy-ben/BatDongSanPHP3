@@ -438,17 +438,6 @@ const goToPage = (page) => {
                                     <i class="fa-solid fa-chevron-right"></i>
                                 </button>
                             </div>
-
-                            <div v-else class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                                <h4 class="text-lg font-bold text-slate-900">Bạn chưa có bài đăng nào</h4>
-                                <p class="mt-2 text-sm text-slate-600">Hãy tạo bài đăng đầu tiên để tiếp cận khách hàng tiềm năng.</p>
-                                <a
-                                    href="/dang-tin"
-                                    class="mt-5 inline-flex rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700"
-                                >
-                                    Tạo bài đăng
-                                </a>
-                            </div>
                         </section>
                     </div>
                 </div>

@@ -15,7 +15,7 @@ class StatsOverview extends StatsOverviewWidget
     protected function getStats(): array
     {
         $totalPosts = Post::query()->count();
-        $publishedPosts = Post::query()->where('status', '1')->count();
+        $publishedPosts = Post::query()->where('status', 'published')->count();
         $totalCategories = Category::query()->count();
         $activeCategories = Category::query()->where('status', '1')->count();
         $totalUsers = User::query()->count();

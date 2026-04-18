@@ -33,31 +33,7 @@ function resolveImageUrl(imagePath) {
     return `/storage/${normalizedPath.replace(/^\/+/, '')}`;
 }
 
-function resolveImageUrl(imagePath) {
-    if (!imagePath) {
-        return '';
-    }
 
-    const normalizedPath = String(imagePath).trim();
-
-    if (!normalizedPath) {
-        return '';
-    }
-
-    if (/^(https?:)?\/\//i.test(normalizedPath) || normalizedPath.startsWith('data:')) {
-        return normalizedPath;
-    }
-
-    if (normalizedPath.startsWith('/storage/')) {
-        return normalizedPath;
-    }
-
-    if (normalizedPath.startsWith('storage/')) {
-        return `/${normalizedPath}`;
-    }
-
-    return `/storage/${normalizedPath.replace(/^\/+/, '')}`;
-}
 const isLoading = ref(false);
 const activeListingType = ref('all');
 const searchKeyword = ref('');
@@ -263,7 +239,7 @@ function listingBadgeClass(type) {
                             href="/post-sell"
                             class="rounded-full bg-[#ff9c22] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
                         >
-                            Xem nhà đấresolveImageUrl(post.img)
+                            Xem nhà đất bán
                         </Link>
                         <Link
                             href="/post-rent"

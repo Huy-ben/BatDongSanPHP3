@@ -528,9 +528,6 @@ onBeforeUnmount(() => {
                                 >
                                     {{ packageLimits.max_images }} ảnh / tin
                                 </p>
-                                <p class="mt-1 text-xs text-slate-500">
-                                    Áp dụng theo package_type
-                                </p>
                             </div>
                             <div
                                 class="rounded-2xl border border-white/60 bg-white/80 p-3.5 text-left shadow-sm backdrop-blur"
@@ -544,9 +541,6 @@ onBeforeUnmount(() => {
                                     class="mt-1.5 text-base font-extrabold text-orange-600"
                                 >
                                     {{ remainingPostsToday }}
-                                </p>
-                                <p class="mt-1 text-xs text-slate-500">
-                                    Dựa vào gói đang sở hữu
                                 </p>
                             </div>
                         </div>
