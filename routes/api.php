@@ -20,6 +20,6 @@ Route::get('home', [HomeController::class, 'data'])->name('homeApi');
 Route::post('contact', [ContactController::class, 'send'])->name('contact.send');
 Route::get('category', [CategoryController::class, 'index'])->name('categoryApi');
 Route::get('blog', [BlogController::class, 'index'])->name('blogApi');
-Route::get('blog/{blog}', [BlogController::class, 'show'])->name('blogDetailApi');
+Route::get('blog/{blog:slug}', [BlogController::class, 'show'])->name('blogDetailApi');
 Route::get('posts/sell', [PostController::class, 'sell'])->name('postSellApi');
 Route::get('posts/rent', [PostController::class, 'rent'])->name('postRentApi');

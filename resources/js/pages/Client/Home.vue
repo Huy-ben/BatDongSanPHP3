@@ -100,6 +100,18 @@ const sliderRef = ref(null);
 const visiblePostsCount = ref(4);
 const loadMoreClicks = ref(0);
 
+function getPostDetailPath(post) {
+    const identifier = post?.slug;
+
+    return identifier ? `/post-detail/${identifier}` : '#';
+}
+
+function getBlogDetailPath(blog) {
+    const identifier = blog?.slug;
+
+    return identifier ? `/blog-detail/${identifier}` : '#';
+}
+
 function syncFavoriteIds(next) {
     projectFavorites.value = new Set(next);
     hotFavorites.value = new Set(next);
@@ -469,7 +481,7 @@ function getCategoryFilterUrl(categoryName) {
                         <a
                             v-for="project in projectPosts"
                             :key="project.id"
-                            :href="`/post-detail/${project.id}`"
+                            :href="getPostDetailPath(project)"
                             data-card
                             class="group relative w-60 shrink-0 cursor-pointer snap-start sm:w-65 md:w-80"
                         >
@@ -535,7 +547,7 @@ function getCategoryFilterUrl(categoryName) {
                             :key="post.id"
                             class="product-item group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-xl"
                         >
-                        <a :href="`/post-detail/${post.id}`">
+                        <a :href="getPostDetailPath(post)">
                             <div class="relative h-48 overflow-hidden md:h-52">
                                 <img
                                     :src="resolveImageUrl(post.img)"
@@ -611,7 +623,7 @@ function getCategoryFilterUrl(categoryName) {
                         <a
                             v-for="blog in blogs"
                             :key="blog.id"
-                            :href="`/blog-detail?id=${blog.id}`"
+                            :href="getBlogDetailPath(blog)"
                             class="group flex cursor-pointer flex-col gap-6 border-b border-gray-100 pb-8 md:flex-row"
                         >
                             <div

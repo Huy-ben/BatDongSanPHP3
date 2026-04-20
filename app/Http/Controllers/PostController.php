@@ -97,6 +97,37 @@ class PostController extends Controller
         return '/storage/'.$value;
     }
 
+    private function generateUniquePostSlug(string $title, ?int $ignorePostId = null): string
+    {
+        $baseSlug = Str::slug($title);
+
+        if ($baseSlug === '') {
+            $baseSlug = 'post';
+        }
+
+        $existingSlugs = Post::query()
+            ->when($ignorePostId !== null, fn ($query) => $query->whereKeyNot($ignorePostId))
+            ->where(function ($query) use ($baseSlug) {
+                $query->where('slug', $baseSlug)
+                    ->orWhere('slug', 'like', $baseSlug.'-%');
+            })
+            ->pluck('slug');
+
+        if (! $existingSlugs->contains($baseSlug)) {
+            return $baseSlug;
+        }
+
+        $maxSuffix = 1;
+
+        foreach ($existingSlugs as $slug) {
+            if (preg_match('/^'.preg_quote($baseSlug, '/').'-(\d+)$/', $slug, $matches) === 1) {
+                $maxSuffix = max($maxSuffix, (int) $matches[1]);
+            }
+        }
+
+        return $baseSlug.'-'.($maxSuffix + 1);
+    }
+
     private function replacePostImages(Post $post, array $imageFiles, int $thumbnailIndex = 0): void
     {
         $post->images()->get()->each(function (Image $image): void {
@@ -221,7 +252,7 @@ class PostController extends Controller
         ];
 
         if (Schema::hasColumn('posts', 'slug')) {
-            $postData['slug'] = Str::slug($validated['title']).'-'.Str::random(8);
+            $postData['slug'] = $this->generateUniquePostSlug($validated['title']);
         }
 
         $post = Post::create($postData);
@@ -287,7 +318,7 @@ class PostController extends Controller
             ]);
 
             if (Schema::hasColumn('posts', 'slug') && $originalTitle !== $validated['title']) {
-                $post->slug = Str::slug($validated['title']).'-'.Str::random(8);
+                $post->slug = $this->generateUniquePostSlug($validated['title'], $post->id);
             }
 
             $post->save();
@@ -412,6 +443,7 @@ class PostController extends Controller
             ->get()
             ->map(fn (Post $item) => [
                 'id' => $item->id,
+                'slug' => $item->slug,
                 'title' => $item->title,
                 'price' => $item->price,
                 'address' => $item->address,
@@ -441,6 +473,7 @@ class PostController extends Controller
             ->get()
             ->map(fn (Post $item) => [
                 'id' => $item->id,
+                'slug' => $item->slug,
                 'title' => $item->title,
                 'price' => $item->price,
                 'address' => $item->address,

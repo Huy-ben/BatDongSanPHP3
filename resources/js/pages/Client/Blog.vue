@@ -42,6 +42,12 @@ const imageUrl = (image) => {
   return `/storage/${image}`;
 };
 
+const getBlogDetailPath = (blog) => {
+  const identifier = blog?.slug;
+
+  return identifier ? `/blog-detail/${identifier}` : '#';
+};
+
 const filteredBlogs = computed(() => {
   const normalizedKeyword = keyword.value.trim().toLowerCase();
 
@@ -148,7 +154,7 @@ onMounted(() => {
               <a
                 v-for="blog in pagedBlogs"
                 :key="blog.id"
-                :href="`/blog-detail?id=${blog.id}`"
+                :href="getBlogDetailPath(blog)"
                 class="overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-brand"
               >
                 <div class="flex h-36 items-center justify-center overflow-hidden bg-slate-100">
@@ -235,7 +241,7 @@ onMounted(() => {
                   {{ String(index + 1).padStart(2, '0') }}
                 </div>
                 <div>
-                  <a :href="`/blog-detail?id=${blog.id}`" class="line-clamp-2 text-xs font-semibold leading-5 text-slate-800 transition hover:text-brand">{{ blog.title }}</a>
+                  <a :href="getBlogDetailPath(blog)" class="line-clamp-2 text-xs font-semibold leading-5 text-slate-800 transition hover:text-brand">{{ blog.title }}</a>
                   <p class="text-[11px] text-orange-600">{{ blog.category?.category_name || 'Chưa phân loại' }}</p>
                   <p class="text-xs text-slate-400">{{ formatDate(blog.created_at) }}</p>
                 </div>

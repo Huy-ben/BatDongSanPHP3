@@ -72,6 +72,7 @@ class PostController extends Controller
             ->through(function (Post $post) {
                 return [
                     'id' => $post->id,
+                    'slug' => $post->slug,
                     'title' => $post->title,
                     'price' => $post->price,
                     'area' => $post->area,

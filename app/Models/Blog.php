@@ -24,6 +24,11 @@ class Blog extends Model
         'status' => 'string',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

@@ -229,20 +229,20 @@ function goToPage(page) {
     fetchPosts(page);
 }
 
-function goToBlogDetail(blogId) {
-    if (!blogId) {
+function goToBlogDetail(blogSlug) {
+    if (!blogSlug) {
         return;
     }
 
-    window.location.href = `/blog-detail?id=${blogId}`;
+    window.location.href = `/blog-detail/${blogSlug}`;
 }
 
-function goToPostDetail(postId) {
-    if (!postId) {
+function goToPostDetail(postSlug) {
+    if (!postSlug) {
         return;
     }
 
-    window.location.href = `/post-detail/${postId}`;
+    window.location.href = `/post-detail/${postSlug}`;
 }
 </script>
 
@@ -404,8 +404,8 @@ function goToPostDetail(postId) {
                                         class="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-300 hover:border-[#ff9c22]/50 hover:shadow-xl md:flex-row"
                                         role="button"
                                         tabindex="0"
-                                        @click="goToPostDetail(post.id)"
-                                        @keydown.enter="goToPostDetail(post.id)"
+                                        @click="goToPostDetail(post.slug)"
+                                        @keydown.enter="goToPostDetail(post.slug)"
                                     >
                                 <div
                                     class="relative h-52 shrink-0 overflow-hidden md:w-80"
@@ -538,7 +538,7 @@ function goToPostDetail(postId) {
                                 v-for="blog in blogs.slice(0, 3)"
                                 :key="blog.id"
                                 class="group mb-4 cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-white transition duration-300 hover:shadow-lg"
-                                @click="goToBlogDetail(blog.id)"
+                                @click="goToBlogDetail(blog.slug)"
                             >
                                 <div class="h-28 overflow-hidden bg-gray-200">
                                     <img

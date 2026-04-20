@@ -38,6 +38,12 @@ const isLoading = ref(false);
 const activeListingType = ref('all');
 const searchKeyword = ref('');
 
+function getPostDetailPath(post) {
+    const identifier = post?.slug;
+
+    return identifier ? `/post-detail/${identifier}` : '#';
+}
+
 onMounted(() => {
     fetchFavoritePosts();
 });
@@ -263,7 +269,7 @@ function listingBadgeClass(type) {
                         :key="post.id"
                         class="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:border-gray-300 hover:shadow-md md:flex-row"
                     >
-                        <a :href="`/post-detail/${post.id}`" class="relative block h-52 shrink-0 overflow-hidden bg-gray-100 md:w-72">
+                        <a :href="getPostDetailPath(post)" class="relative block h-52 shrink-0 overflow-hidden bg-gray-100 md:w-72">
                             <img
                                 :src="resolveImageUrl(post.img)"
                                 :alt="post.title"
@@ -281,7 +287,7 @@ function listingBadgeClass(type) {
                             <div>
                                 <div class="mb-3 flex items-start justify-between gap-3">
                                     <a
-                                        :href="`/post-detail/${post.id}`"
+                                        :href="getPostDetailPath(post)"
                                         class="line-clamp-2 text-base font-bold text-gray-800 uppercase transition duration-300 hover:text-[#ff9c22]"
                                     >
                                         {{ post.title }}

@@ -8,9 +8,9 @@ const latestBlogs = ref([]);
 const loading = ref(true);
 const error = ref('');
 
-const blogId =
+const blogIdentifier =
   typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search).get('id')
+    ? decodeURIComponent((window.location.pathname.match(/^\/blog-detail\/([^/?#]+)/)?.[1] || '').trim()) || null
     : null;
 
 const formatDate = (value) => {
@@ -35,6 +35,12 @@ const imageUrl = (image) => {
   }
 
   return `/storage/${image}`;
+};
+
+const getBlogDetailPath = (item) => {
+  const identifier = item?.slug;
+
+  return identifier ? `/blog-detail/${identifier}` : '#';
 };
 
 const plainContent = computed(() => {
@@ -70,15 +76,15 @@ const categoryStats = computed(() => {
 });
 
 const fetchDetail = async () => {
-  if (!blogId) {
-    error.value = 'Thiếu mã bài viết.';
+  if (!blogIdentifier) {
+    error.value = 'Thiếu slug bài viết.';
     loading.value = false;
     return;
   }
 
   try {
     const [detailResponse, latestResponse] = await Promise.all([
-      fetch(`/api/blog/${blogId}`, { headers: { Accept: 'application/json' } }),
+      fetch(`/api/blog/${encodeURIComponent(blogIdentifier)}`, { headers: { Accept: 'application/json' } }),
       fetch('/api/blog', { headers: { Accept: 'application/json' } }),
     ]);
 
@@ -191,7 +197,7 @@ onMounted(() => {
                 <a
                   v-for="item in latestBlogs.slice(0, 2)"
                   :key="item.id"
-                  :href="`/blog-detail?id=${item.id}`"
+                  :href="getBlogDetailPath(item)"
                   class="rounded-xl border border-slate-200 p-4 transition hover:-translate-y-0.5 hover:border-brand"
                 >
                   <p class="mb-2 text-xs font-bold uppercase tracking-wide text-brand">{{ item.category?.category_name || 'Chưa phân loại' }}</p>
@@ -229,7 +235,7 @@ onMounted(() => {
                 >
                   <div class="min-w-6 text-2xl font-extrabold leading-none text-slate-200">{{ String(index + 1).padStart(2, '0') }}</div>
                   <div>
-                    <a :href="`/blog-detail?id=${item.id}`" class="line-clamp-2 text-xs font-semibold leading-5 text-slate-800 transition hover:text-brand">{{ item.title }}</a>
+                    <a :href="getBlogDetailPath(item)" class="line-clamp-2 text-xs font-semibold leading-5 text-slate-800 transition hover:text-brand">{{ item.title }}</a>
                     <p class="text-[11px] text-orange-600">{{ item.category?.category_name || 'Chưa phân loại' }}</p>
                     <p class="text-xs text-slate-400">{{ formatDate(item.created_at) }}</p>
                   </div>

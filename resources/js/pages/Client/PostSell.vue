@@ -229,20 +229,20 @@ function goToPage(page) {
     fetchPosts(page);
 }
 
-function goToBlogDetail(blogId) {
-    if (!blogId) {
+function goToBlogDetail(blogSlug) {
+    if (!blogSlug) {
         return;
     }
 
-    window.location.href = `/blog-detail?id=${blogId}`;
+    window.location.href = `/blog-detail/${blogSlug}`;
 }
 
-function goToPostDetail(postId) {
-    if (!postId) {
+function goToPostDetail(postSlug) {
+    if (!postSlug) {
         return;
     }
 
-    window.location.href = `/post-detail/${postId}`;
+    window.location.href = `/post-detail/${postSlug}`;
 }
 </script>
 
@@ -391,8 +391,8 @@ function goToPostDetail(postId) {
                                 class="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:border-gray-300 hover:shadow-md md:flex-row"
                                 role="button"
                                 tabindex="0"
-                                @click="goToPostDetail(post.id)"
-                                @keydown.enter="goToPostDetail(post.id)"
+                                @click="goToPostDetail(post.slug)"
+                                @keydown.enter="goToPostDetail(post.slug)"
                             >
                                 <div class="relative h-48 shrink-0 overflow-hidden bg-gray-100 md:w-72">
                                     <div class="grid h-full grid-cols-2 grid-rows-2 gap-0.5">
@@ -487,7 +487,7 @@ function goToPostDetail(postId) {
                                     v-for="blog in blogs.slice(0, 3)"
                                     :key="blog.id"
                                     class="group cursor-pointer overflow-hidden rounded-lg border border-gray-100 bg-white p-2 transition hover:shadow-md"
-                                    @click="goToBlogDetail(blog.id)"
+                                    @click="goToBlogDetail(blog.slug)"
                                 >
                                     <div class="h-22 overflow-hidden rounded-md bg-gray-200">
                                         <img :src="blog.image" class="h-full w-full object-cover transition duration-500 group-hover:scale-110" />

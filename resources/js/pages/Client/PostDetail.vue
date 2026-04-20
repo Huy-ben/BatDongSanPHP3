@@ -688,7 +688,7 @@ onUnmounted(() => {
                                 <a
                                     v-for="item in relatedPosts"
                                     :key="item.id"
-                                    :href="`/post-detail/${item.id}`"
+                                    :href="`/post-detail/${item.slug}`"
                                     class="group block cursor-pointer overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md"
                                 >
                                     <div class="relative overflow-hidden">
@@ -738,7 +738,7 @@ onUnmounted(() => {
                                 <a
                                     v-for="item in featuredPosts"
                                     :key="item.id"
-                                    :href="`/post-detail/${item.id}`"
+                                    :href="`/post-detail/${item.slug}`"
                                     class="group block cursor-pointer overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md"
                                 >
                                     <div class="relative overflow-hidden">
@@ -856,7 +856,7 @@ onUnmounted(() => {
                             <ul class="space-y-1.5 text-xs text-gray-600">
                                 <li v-for="item in featuredPosts.slice(0, 5)" :key="item.id">
                                     <a
-                                        :href="`/post-detail/${item.id}`"
+                                        :href="`/post-detail/${item.slug}`"
                                         class="hover:text-brand block py-0.5 transition"
                                         >{{ item.title }}</a
                                     >

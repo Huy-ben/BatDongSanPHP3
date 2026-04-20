@@ -43,6 +43,7 @@ class FavoriteController extends Controller
 
                 return [
                     'id' => $post->id,
+                    'slug' => $post->slug,
                     'favorite_id' => $favorite->id,
                     'title' => $post->title,
                     'price' => $post->price,

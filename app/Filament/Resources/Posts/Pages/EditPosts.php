@@ -35,7 +35,7 @@ class EditPosts extends EditRecord
             Action::make('previewClient')
                 ->label('Xem trước như client')
                 ->icon('heroicon-o-eye')
-                ->url(fn () => route('post-detail', ['postIdentifier' => $this->record->id]))
+                ->url(fn () => route('post-detail', ['postIdentifier' => $this->record->slug]))
                 ->openUrlInNewTab(),
             DeleteAction::make(),
         ];

@@ -37,7 +37,7 @@ Route::get('package', PackageController::class)->name('package');
 Route::inertia('thanh-toan', 'Client/Payment')->name('payment');
 Route::get('thanh-toan/ket-qua', [PaymentController::class, 'result'])->name('payment.result');
 Route::inertia('blog', 'Client/Blog')->name('blog');
-Route::inertia('blog-detail', 'Client/BlogDetail')->name('blog-detail');
+Route::inertia('blog-detail/{blogIdentifier?}', 'Client/BlogDetail')->name('blog-detail');
 Route::inertia('about-us', 'Client/AboutUs')->name('about-us');
 Route::get('contact', [ContactController::class, 'index'])->name('contact');
 Route::middleware(['auth'])->group(function () {
