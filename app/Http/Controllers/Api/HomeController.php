@@ -18,6 +18,8 @@ class HomeController extends Controller
             ], 401);
         }
 
+        $preferredLocation = trim((string) $request->query('preferred_location', ''));
+
         $posts = Post::query()
             ->with([
                 'category:id,category_name,parent_id',
@@ -25,6 +27,15 @@ class HomeController extends Controller
                 'thumbnailImage:id,product_id,image_url',
             ])
             ->where('status', Post::STATUS_PUBLISHED)
+            ->when($preferredLocation !== '', function ($query) use ($preferredLocation) {
+                $escapedPreferredLocation = addcslashes($preferredLocation, "\\%_");
+                $likeKeyword = "%{$escapedPreferredLocation}%";
+
+                $query->orderByRaw(
+                    "CASE WHEN address LIKE ? ESCAPE '\\\\' OR location LIKE ? ESCAPE '\\\\' THEN 0 ELSE 1 END",
+                    [$likeKeyword, $likeKeyword],
+                );
+            })
             ->orderByDesc('id')
             ->limit(24)
             ->get()

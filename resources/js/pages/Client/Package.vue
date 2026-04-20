@@ -876,11 +876,12 @@ const confirmActivateTrial = () => {
                         >
                             Mua gói ngay
                         </Link>
-                        <button
+                        <Link
+                            href="/contact"
                             class="rounded-xl border border-white/35 px-7 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
                         >
                             Tư vấn miễn phí
-                        </button>
+                    </Link>
                     </div>
                 </section>
 

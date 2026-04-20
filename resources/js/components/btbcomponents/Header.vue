@@ -1,83 +1,88 @@
 <script setup lang="ts">
-import { Link, router, usePage } from '@inertiajs/vue3'
-import axios from 'axios'
-import { computed, onMounted, ref, watch } from 'vue'
-import { clearAuthToken } from '@/lib/authToken'
+import { Link, router, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { computed, onMounted, ref, watch } from 'vue';
+import { clearAuthToken } from '@/lib/authToken';
 
 const navItems = [
     { label: 'Trang chủ', link: '/', match: 'exact' as const },
     { label: 'Nhà đất bán', link: '/post-sell', match: 'prefix' as const },
     { label: 'Nhà đất cho thuê', link: '/post-rent', match: 'prefix' as const },
-    { label: 'Tin tức', link: '/blog', match: 'prefix' as const },
+    { label: 'Wiki BĐS', link: '/blog', match: 'prefix' as const },
     { label: 'Về chúng tôi', link: '/about-us', match: 'exact' as const },
     { label: 'Liên hệ', link: '/contact', match: 'exact' as const },
-]
+];
 
-const isMobileMenuOpen = ref(false)
-const page = usePage()
+const isMobileMenuOpen = ref(false);
+const page = usePage();
 
 const currentPath = computed(() => {
-    const [pathWithoutQuery] = page.url.split('?')
-    if (!pathWithoutQuery) return '/'
+    const [pathWithoutQuery] = page.url.split('?');
+    if (!pathWithoutQuery) return '/';
 
     if (pathWithoutQuery.length > 1 && pathWithoutQuery.endsWith('/')) {
-        return pathWithoutQuery.slice(0, -1)
+        return pathWithoutQuery.slice(0, -1);
     }
 
-    return pathWithoutQuery
-})
+    return pathWithoutQuery;
+});
 
 const menuItems = computed(() => {
     return navItems.map((item) => {
         const isActive =
             item.match === 'exact'
                 ? currentPath.value === item.link
-                : currentPath.value === item.link || currentPath.value.startsWith(`${item.link}/`)
+                : currentPath.value === item.link ||
+                  currentPath.value.startsWith(`${item.link}/`);
 
         return {
             ...item,
             active: isActive,
-        }
-    })
-})
+        };
+    });
+});
 
-const authUser = computed(() => page.props.auth?.user)
-const isAuthenticated = computed(() => Boolean(authUser.value))
-const headerNotifications = ref<Array<{
-    id: number
-    title: string
-    content: string
-    is_read: boolean
-    created_at: string
-}>>([])
-const isLoadingNotifications = ref(false)
+const authUser = computed(() => page.props.auth?.user);
+const isAuthenticated = computed(() => Boolean(authUser.value));
+const headerNotifications = ref<
+    Array<{
+        id: number;
+        title: string;
+        content: string;
+        is_read: boolean;
+        created_at: string;
+    }>
+>([]);
+const isLoadingNotifications = ref(false);
 
 const userInitial = computed(() => {
-    const name = authUser.value?.name
-    return name?.charAt(0).toUpperCase() ?? 'B'
-})
+    const name = authUser.value?.name;
+    return name?.charAt(0).toUpperCase() ?? 'B';
+});
 
-const userAvatar = computed(() => authUser.value?.avatar?.trim() || '')
+const userAvatar = computed(() => authUser.value?.avatar?.trim() || '');
 
 const unreadNotificationCount = computed(() => {
-    return headerNotifications.value.filter((item) => !item.is_read).length
-})
+    return headerNotifications.value.filter((item) => !item.is_read).length;
+});
 
 const previewNotifications = computed(() => {
-    return headerNotifications.value.slice(0, 5)
-})
+    return headerNotifications.value.slice(0, 5);
+});
 
 const unreadBadge = computed(() => {
     if (unreadNotificationCount.value <= 0) {
-        return ''
+        return '';
     }
 
-    return unreadNotificationCount.value > 99 ? '99+' : String(unreadNotificationCount.value)
-})
+    return unreadNotificationCount.value > 99
+        ? '99+'
+        : String(unreadNotificationCount.value);
+});
 
 const formatNotificationTime = (value: string) => {
     if (!value) {
-        return ''
+        return '';
     }
 
     return new Intl.DateTimeFormat('vi-VN', {
@@ -85,56 +90,70 @@ const formatNotificationTime = (value: string) => {
         minute: '2-digit',
         day: '2-digit',
         month: '2-digit',
-    }).format(new Date(value))
-}
+    }).format(new Date(value));
+};
 
 const fetchHeaderNotifications = async () => {
     if (!isAuthenticated.value) {
-        headerNotifications.value = []
-        return
+        headerNotifications.value = [];
+        return;
     }
 
-    isLoadingNotifications.value = true
+    isLoadingNotifications.value = true;
 
     try {
-        const response = await axios.get('/notifications/data')
-        headerNotifications.value = Array.isArray(response.data) ? response.data : []
+        const response = await axios.get('/notifications/data');
+        headerNotifications.value = Array.isArray(response.data)
+            ? response.data
+            : [];
     } catch {
-        headerNotifications.value = []
+        headerNotifications.value = [];
     } finally {
-        isLoadingNotifications.value = false
+        isLoadingNotifications.value = false;
     }
-}
+};
 
 const handleLogout = async () => {
     try {
-        await axios.post('/api/logout')
+        await axios.post('/api/logout');
     } catch {
         // Continue with web logout even if API token already invalid.
     }
 
-    clearAuthToken()
-    router.post('/logout')
-}
+    clearAuthToken();
+    router.post('/logout');
+};
 
 onMounted(() => {
-    fetchHeaderNotifications()
-})
+    fetchHeaderNotifications();
+});
 
 watch(
     () => authUser.value?.id,
     () => {
-        fetchHeaderNotifications()
-    }
-)
+        fetchHeaderNotifications();
+    },
+);
 </script>
 
 <template>
-    <header class="sticky top-0 z-50 border-b border-zinc-200 bg-white text-zinc-900">
-        <div class="mx-auto flex h-24 w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header
+        class="sticky top-0 z-50 border-b border-zinc-200 bg-white text-zinc-900"
+    >
+        <div
+            class="mx-auto flex h-24 w-full max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8"
+        >
             <div class="flex items-center gap-9">
-                <a href="/" class="flex items-center" aria-label="Logo placeholder">
-                    <img src="https://res.cloudinary.com/djbobb5oe/image/upload/v1774891267/BTB_Logo_lxnhfh_ainsl1_py1quw.png" alt="Logo" width="80"  />
+                <a
+                    href="/"
+                    class="flex items-center"
+                    aria-label="Logo placeholder"
+                >
+                    <img
+                        src="https://res.cloudinary.com/djbobb5oe/image/upload/v1774891267/BTB_Logo_lxnhfh_ainsl1_py1quw.png"
+                        alt="Logo"
+                        width="80"
+                    />
                 </a>
 
                 <nav class="hidden items-center gap-8 lg:flex">
@@ -143,24 +162,36 @@ watch(
                         :key="item.label"
                         :href="item.link"
                         class="relative py-1 text-[15px] font-semibold transition-colors"
-                        :class="item.active ? 'text-zinc-900 after:absolute after:-bottom-3 after:left-0 after:h-[3px] after:w-full after:rounded-full after:bg-[#FF9C22]' : 'text-zinc-700 hover:text-zinc-900'"
+                        :class="
+                            item.active
+                                ? 'text-zinc-900 after:absolute after:-bottom-3 after:left-0 after:h-[3px] after:w-full after:rounded-full after:bg-[#FF9C22]'
+                                : 'text-zinc-700 hover:text-zinc-900'
+                        "
                     >
                         {{ item.label }}
                     </Link>
-
-                    
                 </nav>
             </div>
 
-            <div class="hidden items-center gap-6 lg:flex">
-
+            <div class="hidden items-center gap-3 lg:flex">
                 <Link
                     href="/favorites"
                     class="rounded-full p-2 text-zinc-700 transition hover:text-[#B76300]"
                     aria-label="Yêu thích"
                 >
-                    <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 20.5C11.8 20.5 11.6 20.4 11.4 20.2L4.7 13.8C3 12.1 3.1 9.4 4.9 7.8C6.6 6.3 9.2 6.5 10.6 8.1L12 9.7L13.4 8.1C14.8 6.5 17.4 6.3 19.1 7.8C20.9 9.4 21 12.1 19.3 13.8L12.6 20.2C12.4 20.4 12.2 20.5 12 20.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                    <svg
+                        viewBox="0 0 24 24"
+                        class="h-6 w-6"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M12 20.5C11.8 20.5 11.6 20.4 11.4 20.2L4.7 13.8C3 12.1 3.1 9.4 4.9 7.8C6.6 6.3 9.2 6.5 10.6 8.1L12 9.7L13.4 8.1C14.8 6.5 17.4 6.3 19.1 7.8C20.9 9.4 21 12.1 19.3 13.8L12.6 20.2C12.4 20.4 12.2 20.5 12 20.5Z"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
                     </svg>
                 </Link>
 
@@ -170,12 +201,23 @@ watch(
                         class="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-zinc-700 transition hover:text-[#B76300]"
                         aria-label="Thông báo"
                     >
-                        <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M8 17H16M9 20H15M17 10.5C17 8 15 6 12.5 6H11.5C9 6 7 8 7 10.5V14L5.5 16H18.5L17 14V10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        <svg
+                            viewBox="0 0 24 24"
+                            class="h-6 w-6"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M8 17H16M9 20H15M17 10.5C17 8 15 6 12.5 6H11.5C9 6 7 8 7 10.5V14L5.5 16H18.5L17 14V10.5Z"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
                         </svg>
                         <span
                             v-if="unreadNotificationCount > 0"
-                            class="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF9C22] px-1 text-xs font-bold leading-none text-white"
+                            class="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF9C22] px-1 text-xs leading-none font-bold text-white"
                         >
                             {{ unreadBadge }}
                         </span>
@@ -183,39 +225,76 @@ watch(
 
                     <div
                         v-if="isAuthenticated"
-                        class="invisible pointer-events-none absolute right-0 top-[calc(100%-6px)] z-30 w-96 overflow-hidden rounded-xl border border-zinc-200 bg-white p-3 opacity-0 shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition-all duration-200 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100"
+                        class="pointer-events-none invisible absolute top-[calc(100%-6px)] right-0 z-30 w-96 overflow-hidden rounded-xl border border-zinc-200 bg-white p-3 opacity-0 shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition-all duration-200 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100"
                     >
-                        <div class="mb-2 flex items-center justify-between border-b border-zinc-200 pb-2">
-                            <p class="text-sm font-bold text-zinc-900">Thông báo</p>
-                            <Link href="/notifications" class="text-xs font-semibold text-[#B76300] hover:text-[#FF9C22]">Xem tất cả</Link>
+                        <div
+                            class="mb-2 flex items-center justify-between border-b border-zinc-200 pb-2"
+                        >
+                            <p class="text-sm font-bold text-zinc-900">
+                                Thông báo
+                            </p>
+                            <Link
+                                href="/notifications"
+                                class="text-xs font-semibold text-[#B76300] hover:text-[#FF9C22]"
+                                >Xem tất cả</Link
+                            >
                         </div>
 
-                        <div v-if="isLoadingNotifications" class="py-6 text-center text-xs text-zinc-500">
+                        <div
+                            v-if="isLoadingNotifications"
+                            class="py-6 text-center text-xs text-zinc-500"
+                        >
                             Đang tải thông báo...
                         </div>
 
-                        <div v-else-if="previewNotifications.length === 0" class="py-6 text-center text-xs text-zinc-500">
+                        <div
+                            v-else-if="previewNotifications.length === 0"
+                            class="py-6 text-center text-xs text-zinc-500"
+                        >
                             Bạn chưa có thông báo nào.
                         </div>
 
-                        <div v-else class="notification-scroll max-h-80 space-y-2 overflow-y-auto pr-1">
+                        <div
+                            v-else
+                            class="notification-scroll max-h-80 space-y-2 overflow-y-auto pr-1"
+                        >
                             <Link
                                 v-for="item in previewNotifications"
                                 :key="item.id"
                                 href="/notifications"
                                 class="block rounded-lg border px-3 py-2 transition"
-                                :class="item.is_read ? 'border-zinc-200 bg-white hover:border-zinc-300' : 'border-orange-200 bg-orange-50/50 hover:border-orange-300'"
+                                :class="
+                                    item.is_read
+                                        ? 'border-zinc-200 bg-white hover:border-zinc-300'
+                                        : 'border-orange-200 bg-orange-50/50 hover:border-orange-300'
+                                "
                             >
-                                <div class="flex items-start justify-between gap-2">
-                                    <p class="line-clamp-1 text-sm font-semibold text-zinc-900">{{ item.title }}</p>
-                                    <span v-if="!item.is_read" class="mt-1 h-2 w-2 rounded-full bg-[#FF9C22]"></span>
+                                <div
+                                    class="flex items-start justify-between gap-2"
+                                >
+                                    <p
+                                        class="line-clamp-1 text-sm font-semibold text-zinc-900"
+                                    >
+                                        {{ item.title }}
+                                    </p>
+                                    <span
+                                        v-if="!item.is_read"
+                                        class="mt-1 h-2 w-2 rounded-full bg-[#FF9C22]"
+                                    ></span>
                                 </div>
-                                <p class="mt-0.5 line-clamp-2 text-xs text-zinc-600">{{ item.content }}</p>
-                                <p class="mt-1 text-[11px] text-zinc-400">{{ formatNotificationTime(item.created_at) }}</p>
+                                <p
+                                    class="mt-0.5 line-clamp-2 text-xs text-zinc-600"
+                                >
+                                    {{ item.content }}
+                                </p>
+                                <p class="mt-1 text-[11px] text-zinc-400">
+                                    {{
+                                        formatNotificationTime(item.created_at)
+                                    }}
+                                </p>
                             </Link>
                         </div>
                     </div>
-
                 </div>
 
                 <div v-if="isAuthenticated" class="group relative">
@@ -234,9 +313,10 @@ watch(
                     </a>
 
                     <div
-                        class="pointer-events-none absolute right-0 top-full z-30 w-52 translate-y-2 rounded-xl border border-zinc-200 bg-white p-2 opacity-0 shadow-lg transition-all duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100"
+                        class="pointer-events-none absolute top-full right-0 z-30 w-52 translate-y-2 rounded-xl border border-zinc-200 bg-white p-2 opacity-0 shadow-lg transition-all duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100"
                     >
-                        <a v-if="authUser.role == 0"
+                        <a
+                            v-if="authUser.role == 0"
                             href="/admin"
                             class="block rounded-lg px-3 py-2 text-sm font-medium text-red-500 transition hover:bg-zinc-100 hover:text-zinc-900"
                         >
@@ -285,6 +365,12 @@ watch(
                 >
                     Đăng tin
                 </Link>
+                <Link
+                    href="/package"
+                    class="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-[15px] font-semibold text-zinc-900 transition hover:border-[#FF9C22] hover:text-[#B76300]"
+                >
+                    Mua gói
+                </Link>
             </div>
 
             <button
@@ -294,7 +380,12 @@ watch(
                 :aria-expanded="isMobileMenuOpen"
                 @click="isMobileMenuOpen = !isMobileMenuOpen"
             >
-                <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg
+                    viewBox="0 0 24 24"
+                    class="h-6 w-6"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
                     <path
                         v-if="!isMobileMenuOpen"
                         d="M4 7H20M4 12H20M4 17H14"
@@ -315,7 +406,7 @@ watch(
 
         <div
             v-if="isMobileMenuOpen"
-            class="border-t border-zinc-200 bg-white px-4 pb-4 pt-3 sm:px-6 lg:hidden"
+            class="border-t border-zinc-200 bg-white px-4 pt-3 pb-4 sm:px-6 lg:hidden"
         >
             <nav class="space-y-1">
                 <Link
@@ -323,7 +414,11 @@ watch(
                     :key="`mobile-${item.label}`"
                     :href="item.link"
                     class="block rounded-lg px-3 py-2 text-base font-medium transition-colors"
-                    :class="item.active ? 'bg-[#FFF1E1] text-[#B76300]' : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'"
+                    :class="
+                        item.active
+                            ? 'bg-[#FFF1E1] text-[#B76300]'
+                            : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
+                    "
                     @click="isMobileMenuOpen = false"
                 >
                     {{ item.label }}
@@ -344,7 +439,7 @@ watch(
                     Thông báo
                     <span
                         v-if="unreadNotificationCount > 0"
-                        class="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-[#FF9C22] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
+                        class="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-[#FF9C22] px-1.5 py-0.5 text-[10px] leading-none font-bold text-white"
                     >
                         {{ unreadBadge }}
                     </span>

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\Auth\GoogleLoginController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PostController;
@@ -23,6 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Home
 Route::inertia('/', 'Client/Home')->name('home');
+Route::post('preferred-location', [HomeController::class, 'setPreferredLocation'])->name('home.preferred-location');
 // Post
 Route::inertia('post-sell', 'Client/PostSell')->name('post-sell');
 Route::inertia('post-rent', 'Client/PostRent')->name('post-rent');

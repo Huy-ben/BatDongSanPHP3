@@ -11,6 +11,44 @@ const blogs = ref([]);
 const allCategories = ref([]);
 const page = usePage();
 const isAuthenticated = computed(() => Boolean(page.props.auth?.user));
+const preferredLocation = ref((page.props.preferredHomeLocation ?? '').trim());
+const showLocationModal = ref(false);
+const preferredLocationInput = ref(preferredLocation.value);
+const preferredLocationError = ref('');
+const isSavingPreferredLocation = ref(false);
+const provinces = ref([]);
+const locationQuery = ref(preferredLocation.value);
+const isLoadingProvinces = ref(false);
+const provincesError = ref('');
+const showHomeLocationDropdown = ref(false);
+const showModalLocationDropdown = ref(false);
+
+function normalizeSearchText(value) {
+    return String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+}
+
+function formatProvinceName(name) {
+    return String(name ?? '')
+    .replace(/^(Tỉnh|Thành phố)\s+/i, '')
+        .trim();
+}
+
+function filterProvinceOptions(query) {
+    const keyword = normalizeSearchText(query);
+
+    if (!keyword) {
+        return provinces.value;
+    }
+
+    return provinces.value.filter((province) => normalizeSearchText(province.name).includes(keyword));
+}
+
+const homeLocationOptions = computed(() => filterProvinceOptions(locationQuery.value));
+const modalLocationOptions = computed(() => filterProvinceOptions(preferredLocationInput.value));
 
 function resolveImageUrl(imagePath) {
     if (!imagePath) {
@@ -41,16 +79,28 @@ function resolveImageUrl(imagePath) {
 onMounted(() => {
     fetchHomeData();
     fetchCategories();
+    fetchProvinces();
 
     if (isAuthenticated.value) {
         fetchFavoriteIds();
     }
+
+    if (!preferredLocation.value) {
+        showLocationModal.value = true;
+    }
 });
 
 const fetchHomeData = () => {
-    axios.get('/api/home', {
+    const requestConfig = {
         headers: getBearerAuthHeaders(),
-    })
+        params: {},
+    };
+
+    if (preferredLocation.value) {
+        requestConfig.params.preferred_location = preferredLocation.value;
+    }
+
+    axios.get('/api/home', requestConfig)
         .then(response => {
             posts.value = response.data.posts ?? [];
             categories.value = response.data.categories ?? [];
@@ -63,6 +113,35 @@ const fetchHomeData = () => {
 };
 
 const DEFAULT_PROPERTY_TYPE = 'Tất cả loại';
+
+const fetchProvinces = async () => {
+    isLoadingProvinces.value = true;
+    provincesError.value = '';
+
+    try {
+        const response = await axios.get('/api/locations/provinces');
+        const nextProvinces = Array.isArray(response.data?.provinces)
+            ? response.data.provinces
+                .map((province) => ({
+                    code: String(province.code ?? ''),
+                    name: formatProvinceName(province.name),
+                }))
+                .filter((province) => province.name)
+            : [];
+
+        provinces.value = nextProvinces;
+
+        if (!locationQuery.value && preferredLocation.value) {
+            locationQuery.value = preferredLocation.value;
+        }
+    } catch (error) {
+        console.error('Error fetching provinces:', error);
+        provinces.value = [];
+        provincesError.value = 'Không thể tải danh sách tỉnh/thành.';
+    } finally {
+        isLoadingProvinces.value = false;
+    }
+};
 
 const fetchCategories = () => {
     axios.get('/api/category')
@@ -232,6 +311,50 @@ function toggleProjectFavorite(id) {
     toggleFavorite(id);
 }
 
+function openPreferredLocationModal() {
+    preferredLocationInput.value = preferredLocation.value || locationQuery.value;
+    preferredLocationError.value = '';
+    showLocationModal.value = true;
+}
+
+function selectHomeLocation(name) {
+    locationQuery.value = formatProvinceName(name);
+    showHomeLocationDropdown.value = false;
+}
+
+function selectPreferredLocation(name) {
+    preferredLocationInput.value = formatProvinceName(name);
+    showModalLocationDropdown.value = false;
+}
+
+async function savePreferredLocation() {
+    const nextLocation = preferredLocationInput.value.trim();
+
+    if (!nextLocation) {
+        preferredLocationError.value = 'Vui lòng nhập khu vực bạn muốn tìm bất động sản.';
+        return;
+    }
+
+    preferredLocationError.value = '';
+    isSavingPreferredLocation.value = true;
+
+    try {
+        const response = await axios.post('/preferred-location', {
+            preferred_location: nextLocation,
+        });
+
+        preferredLocation.value = (response.data?.preferred_location ?? nextLocation).trim();
+        locationQuery.value = preferredLocation.value;
+        showLocationModal.value = false;
+        fetchHomeData();
+    } catch (error) {
+        console.error('Error saving preferred location:', error);
+        preferredLocationError.value = 'Không thể lưu khu vực lúc này. Vui lòng thử lại.';
+    } finally {
+        isSavingPreferredLocation.value = false;
+    }
+}
+
 function toggleHotFavorite(id) {
     toggleFavorite(id);
 }
@@ -255,6 +378,10 @@ function submitQuickSearch() {
 
     if (selectedPropertyType.value && selectedPropertyType.value !== DEFAULT_PROPERTY_TYPE) {
         searchParams.set('property_type', selectedPropertyType.value);
+    }
+
+    if (locationQuery.value.trim()) {
+        searchParams.set('location', locationQuery.value.trim());
     }
 
     if (minPrice.value) {
@@ -305,7 +432,7 @@ function getCategoryFilterUrl(categoryName) {
                     </h1>
 
                     <div
-                        class="overflow-hidden rounded-2xl border border-orange-100 bg-white/95 p-4 text-left shadow-2xl backdrop-blur sm:p-5 md:p-6"
+                        class="rounded-2xl border border-orange-100 bg-white/95 p-4 text-left shadow-2xl backdrop-blur sm:p-5 md:p-6"
                     >
                         <div
                             class="mb-4 flex flex-col gap-3 md:mb-5 md:flex-row md:items-center md:justify-between"
@@ -326,6 +453,13 @@ function getCategoryFilterUrl(categoryName) {
                                 <span class="rounded-full bg-gray-100 px-3 py-1"
                                     >1000+ tin mới</span
                                 >
+                                <button
+                                    type="button"
+                                    @click="openPreferredLocationModal"
+                                    class="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-orange-700 transition hover:bg-orange-100"
+                                >
+                                    {{ preferredLocation ? `Khu vực ưu tiên: ${preferredLocation}` : 'Chọn khu vực ưu tiên' }}
+                                </button>
                             </div>
                         </div>
 
@@ -359,7 +493,7 @@ function getCategoryFilterUrl(categoryName) {
                         <div
                             class="grid grid-cols-1 gap-3 md:grid-cols-12 md:gap-4"
                         >
-                            <div class="relative md:col-span-5">
+                            <div class="relative md:col-span-4">
                                 <i
                                     class="fa-solid fa-magnifying-glass absolute top-3.5 left-3 text-gray-400"
                                 ></i>
@@ -369,6 +503,41 @@ function getCategoryFilterUrl(categoryName) {
                                     placeholder="Tìm kiếm địa điểm, dự án..."
                                     class="w-full rounded-xl border border-gray-200 bg-white py-3 pr-4 pl-10 text-sm shadow-sm transition focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
                                 />
+                            </div>
+
+                            <div class="relative md:col-span-2">
+                                <i
+                                    class="fa-solid fa-location-dot absolute top-3.5 left-3 text-gray-400"
+                                ></i>
+                                <input
+                                    v-model="locationQuery"
+                                    type="text"
+                                    placeholder="Tỉnh / thành phố"
+                                    class="w-full rounded-xl border border-gray-200 bg-white py-3 pr-4 pl-10 text-sm shadow-sm transition focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                                    :disabled="isLoadingProvinces"
+                                    @focus="showHomeLocationDropdown = true"
+                                    @input="showHomeLocationDropdown = true"
+                                    @blur="setTimeout(() => { showHomeLocationDropdown = false; }, 120)"
+                                />
+
+                                <div
+                                    v-if="showHomeLocationDropdown"
+                                    class="absolute top-[calc(100%+6px)] right-0 left-0 z-40 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl"
+                                >
+                                    <button
+                                        v-for="province in homeLocationOptions"
+                                        :key="`home-option-${province.code || province.name}`"
+                                        type="button"
+                                        @mousedown.prevent
+                                        @click="selectHomeLocation(province.name)"
+                                        class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm text-gray-700 transition last:border-b-0 hover:bg-orange-50"
+                                    >
+                                        {{ formatProvinceName(province.name) }}
+                                    </button>
+                                    <p v-if="!homeLocationOptions.length" class="px-3 py-2 text-sm text-gray-500">
+                                        Không có tỉnh/thành phố phù hợp.
+                                    </p>
+                                </div>
                             </div>
 
                             <div class="relative md:col-span-2">
@@ -409,7 +578,7 @@ function getCategoryFilterUrl(categoryName) {
                                 </div>
                             </div>
 
-                            <div class="md:col-span-3">
+                            <div class="md:col-span-2">
                                 <button
                                     @click="submitQuickSearch"
                                     class="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-orange-500 to-amber-500 py-3 font-bold text-white shadow-lg transition hover:from-orange-600 hover:to-amber-600"
@@ -417,6 +586,10 @@ function getCategoryFilterUrl(categoryName) {
                                     <i class="fa-solid fa-search"></i> Tìm kiếm
                                     ngay
                                 </button>
+                            </div>
+
+                            <div v-if="provincesError" class="md:col-span-12">
+                                <p class="text-sm text-amber-700">{{ provincesError }}</p>
                             </div>
                         </div>
                     </div>
@@ -694,6 +867,75 @@ function getCategoryFilterUrl(categoryName) {
                     </div>
                 </div>
             </section>
+
+            <div
+                v-if="showLocationModal"
+                class="fixed inset-0 z-60 flex items-center justify-center bg-black/55 px-4"
+            >
+                <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl sm:p-7">
+                    <p class="text-xs font-semibold tracking-[0.28em] text-orange-600 uppercase">Tùy chỉnh gợi ý</p>
+                    <h3 class="mt-2 text-2xl font-black text-gray-900">Bạn muốn tìm bất động sản ở đâu?</h3>
+                    <p class="mt-2 text-sm text-gray-500">
+                        Nhập tỉnh/thành phố hoặc khu vực bạn quan tâm, hệ thống sẽ ưu tiên hiển thị tin phù hợp trên trang chủ.
+                    </p>
+
+                    <div class="mt-5">
+                        <div class="relative">
+                            <input
+                                v-model="preferredLocationInput"
+                                type="text"
+                                placeholder="Ví dụ: Cần Thơ"
+                                class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
+                                @keyup.enter="savePreferredLocation"
+                                @focus="showModalLocationDropdown = true"
+                                @input="showModalLocationDropdown = true"
+                                @blur="setTimeout(() => { showModalLocationDropdown = false; }, 120)"
+                            />
+
+                            <div
+                                v-if="showModalLocationDropdown"
+                                class="absolute top-[calc(100%+6px)] right-0 left-0 z-40 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl"
+                            >
+                                <button
+                                    v-for="province in modalLocationOptions"
+                                    :key="`modal-option-${province.code || province.name}`"
+                                    type="button"
+                                    @mousedown.prevent
+                                    @click="selectPreferredLocation(province.name)"
+                                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm text-gray-700 transition last:border-b-0 hover:bg-orange-50"
+                                >
+                                    {{ formatProvinceName(province.name) }}
+                                </button>
+                                <p v-if="!modalLocationOptions.length" class="px-3 py-2 text-sm text-gray-500">
+                                    Không có tỉnh/thành phố phù hợp.
+                                </p>
+                            </div>
+                        </div>
+                        <p v-if="preferredLocationError" class="mt-2 text-sm font-medium text-red-500">
+                            {{ preferredLocationError }}
+                        </p>
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            @click="showLocationModal = false"
+                            class="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+                        >
+                            Để sau
+                        </button>
+                        <button
+                            type="button"
+                            @click="savePreferredLocation"
+                            :disabled="isSavingPreferredLocation"
+                            class="rounded-xl bg-linear-to-r from-orange-500 to-amber-500 px-5 py-2.5 text-sm font-bold text-white transition hover:from-orange-600 hover:to-amber-600 disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                            {{ isSavingPreferredLocation ? 'Đang lưu...' : 'Lưu khu vực' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </ClientLayout>
 </template>
