@@ -310,6 +310,13 @@ const goToPage = (page) => {
                             >
                                 {{ packageAction.label }}
                             </a>
+
+                            <a
+                                href="/profile/lich-su-thanh-toan"
+                                class="mt-3 inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold tracking-[0.18em] text-slate-700 uppercase transition hover:bg-slate-50"
+                            >
+                                Lịch sử thanh toán
+                            </a>
                         </section>
                     </div>
 

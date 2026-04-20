@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('favorites', [FavoriteController::class, 'clear'])->name('favorites.clear');
 
     Route::get('profile', [ProfileController::class, 'show'])->name('profile');
+    Route::get('profile/lich-su-thanh-toan', [ProfileController::class, 'paymentHistory'])->name('profile.payment-history');
     Route::patch('profile', [ProfileController::class, 'update'])->name('client.profile.update');
     Route::post('profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
 });

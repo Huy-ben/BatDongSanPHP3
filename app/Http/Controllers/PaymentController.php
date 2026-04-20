@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ListingPackage;
 use App\Models\Notification;
+use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -182,6 +183,7 @@ class PaymentController extends Controller
         }
 
         $txnRef = (string) ($request->query('vnp_TxnRef', ''));
+        $transactionCode = (string) ($request->query('vnp_TransactionNo', $txnRef));
         $responseCode = (string) ($request->query('vnp_ResponseCode', ''));
         $transactionStatus = (string) ($request->query('vnp_TransactionStatus', ''));
         $amount = (int) $request->query('vnp_Amount', 0);
@@ -295,6 +297,14 @@ class PaymentController extends Controller
                     false
                 );
             }
+
+            $this->createOrderRecord(
+                (int) $pending['user_id'],
+                (string) $package['name'],
+                (float) $pending['amount'],
+                ! empty($pending['renew']),
+                $transactionCode
+            );
         } catch (\Throwable $exception) {
             Log::error('VNPay callback save package failed', [
                 'message' => $exception->getMessage(),
@@ -369,6 +379,17 @@ class PaymentController extends Controller
             'title' => $title,
             'content' => $content,
             'is_read' => false,
+        ]);
+    }
+
+    private function createOrderRecord(int $userId, string $packageName, float $amount, bool $isRenew, string $transactionCode): void
+    {
+        Order::query()->create([
+            'user_id' => $userId,
+            'type' => $isRenew ? 'renew' : 'new',
+            'package_name' => $packageName,
+            'amount' => $amount,
+            'transaction_code' => $transactionCode,
         ]);
     }
 }

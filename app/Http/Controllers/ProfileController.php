@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\ListingPackage;
+use App\Models\Order;
 use App\Models\Post;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -88,6 +89,36 @@ class ProfileController extends Controller
         $user->save();
 
         return back();
+    }
+
+    public function paymentHistory(Request $request): Response
+    {
+        $user = $request->user();
+        $page = (int) $request->query('page', 1);
+
+        $orders = Order::query()
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate(10, ['*'], 'page', $page);
+
+        return inertia('Client/PaymentHistory', [
+            'orders' => [
+                'data' => $orders->map(function (Order $order): array {
+                    return [
+                        'id' => $order->id,
+                        'type' => (string) $order->type,
+                        'package_name' => (string) $order->package_name,
+                        'amount' => (float) $order->amount,
+                        'transaction_code' => (string) $order->transaction_code,
+                        'created_at' => $order->created_at?->format('d/m/Y H:i'),
+                    ];
+                })->values()->all(),
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total(),
+            ],
+        ]);
     }
 
     public function uploadAvatar(Request $request): JsonResponse
