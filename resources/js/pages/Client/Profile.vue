@@ -1,9 +1,9 @@
 <script setup>
 import InputError from '@/components/InputError.vue';
 import ClientLayout from '@/layouts/ClientLayout.vue';
-import { useForm } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { jam_read_num_forvietnamese } from '@/utils/money';
 
 const props = defineProps({
@@ -49,6 +49,14 @@ const isEditModalOpen = ref(false);
 const isUploadingAvatar = ref(false);
 const currentPage = ref(props.posts.current_page);
 const activePostsTab = ref(['waiting', 'draft', 'rejected'].includes(props.postsTab) ? props.postsTab : 'published');
+
+watch(() => props.posts.current_page, (value) => {
+    currentPage.value = value;
+});
+
+watch(() => props.postsTab, (value) => {
+    activePostsTab.value = ['published', 'waiting', 'draft', 'rejected'].includes(value) ? value : 'published';
+});
 
 const form = useForm({
     name: props.profile.name ?? '',
@@ -238,7 +246,16 @@ const goToPage = (page) => {
     }
 
     currentPage.value = page;
-    window.location.href = `/profile?tab=${activePostsTab.value}&page=${page}`;
+
+    router.get('/profile', {
+        tab: activePostsTab.value,
+        page,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        only: ['posts', 'postsTab', 'postCounts'],
+    });
 };
 
 const switchPostsTab = (tab) => {
@@ -247,7 +264,16 @@ const switchPostsTab = (tab) => {
     }
 
     activePostsTab.value = tab;
-    window.location.href = `/profile?tab=${tab}`;
+
+    router.get('/profile', {
+        tab,
+        page: 1,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        only: ['posts', 'postsTab', 'postCounts'],
+    });
 };
 </script>
 
