@@ -329,7 +329,14 @@ class PostController extends Controller
             }
         });
 
-        return redirect()->route('post-edit', $post)->with('status', 'post-updated');
+        $targetTab = match ($nextStatus) {
+            Post::STATUS_DRAFT => 'draft',
+            Post::STATUS_WAITING => 'waiting',
+            Post::STATUS_REJECTED => 'rejected',
+            default => 'published',
+        };
+
+        return redirect()->route('profile', ['tab' => $targetTab])->with('status', 'post-updated');
     }
 
     public function postsell()

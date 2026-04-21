@@ -38,6 +38,41 @@ class PaymentController extends Controller
         ],
     ];
 
+    public function show(Request $request): \Inertia\Response|RedirectResponse
+    {
+        $plan = (string) $request->query('plan', 'vip');
+        if (! array_key_exists($plan, self::PACKAGE_MAP)) {
+            $plan = 'vip';
+        }
+
+        $isRenewMode = $request->query('renew') === '1';
+
+        $activePackage = ListingPackage::query()
+            ->where('user_id', $request->user()->id)
+            ->where('status', '1')
+            ->whereDate('expiry_date', '>=', now()->toDateString())
+            ->orderByDesc('expiry_date')
+            ->first(['package_type']);
+
+        if ($activePackage && ! $isRenewMode) {
+            $activePlan = match ((string) $activePackage->package_type) {
+                '1' => 'vip',
+                '2' => 'svip',
+                default => null,
+            };
+
+            if ($activePlan) {
+                return redirect()->route('payment', [
+                    'plan' => $activePlan,
+                    'renew' => 1,
+                    'auto_renew' => 1,
+                ]);
+            }
+        }
+
+        return Inertia::render('Client/Payment');
+    }
+
     public function create(Request $request): Response|RedirectResponse
     {
         $validated = $request->validate([

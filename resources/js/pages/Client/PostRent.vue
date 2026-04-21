@@ -530,7 +530,7 @@ function goToPostDetail(postSlug) {
                                 <h3
                                     class="m-0 text-lg leading-none font-black tracking-wide text-gray-900 uppercase"
                                 >
-                                    <span class="text-[#ff9c22]">Tin tức</span> nổi bật
+                                    <span class="text-[#ff9c22]">Bài viết</span> nổi bật
                                 </h3>
                             </div>
 
@@ -566,7 +566,7 @@ function goToPostDetail(postSlug) {
                             <button
                                 class="w-full rounded-lg bg-gray-100 py-2.5 text-xs font-bold tracking-wider text-gray-800 uppercase transition duration-300 hover:bg-[#ff9c22] hover:text-white"
                             >
-                                Tất cả tin tức
+                                Tất cả bài viết
                             </button>
                         </div>
                     </aside>

@@ -36,7 +36,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('sua-tin/{post}', [PostController::class, 'update'])->name('post-update');
 });
 Route::get('package', PackageController::class)->name('package');
-Route::inertia('thanh-toan', 'Client/Payment')->name('payment');
+Route::get('thanh-toan', [PaymentController::class, 'show'])->middleware('auth')->name('payment');
 Route::get('thanh-toan/ket-qua', [PaymentController::class, 'result'])->name('payment.result');
 Route::inertia('blog', 'Client/Blog')->name('blog');
 Route::inertia('blog-detail/{blogIdentifier?}', 'Client/BlogDetail')->name('blog-detail');

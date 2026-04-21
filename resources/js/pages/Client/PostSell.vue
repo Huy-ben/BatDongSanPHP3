@@ -475,33 +475,50 @@ function goToPostDetail(postSlug) {
                     </div>
 
                     <aside class="lg:col-span-1">
-                        <div class="sticky top-28">
-                            <div class="mb-4 flex items-center border-b border-gray-200 pb-3">
-                                <h3 class="text-base font-bold tracking-wide text-gray-900">
-                                    <span class="text-[#ff9c22]">Tin tức</span> nổi bật
+                        <div>
+                            <div
+                                class="mb-5 flex items-center border-b border-gray-200 pb-3"
+                            >
+                                <h3
+                                    class="m-0 text-lg leading-none font-black tracking-wide text-gray-900 uppercase"
+                                >
+                                    <span class="text-[#ff9c22]">Bài viết</span> nổi bật
                                 </h3>
                             </div>
 
-                            <div class="space-y-4">
-                                <article
-                                    v-for="blog in blogs.slice(0, 3)"
-                                    :key="blog.id"
-                                    class="group cursor-pointer overflow-hidden rounded-lg border border-gray-100 bg-white p-2 transition hover:shadow-md"
-                                    @click="goToBlogDetail(blog.slug)"
-                                >
-                                    <div class="h-22 overflow-hidden rounded-md bg-gray-200">
-                                        <img :src="blog.image" class="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
-                                    </div>
-                                    <div class="mt-2 p-1">
-                                        <p class="text-[10px] font-semibold text-[#ff9c22]">Thị trường</p>
-                                        <h4 class="mt-1 line-clamp-2 text-[12px] font-semibold text-gray-800 group-hover:text-gray-900">{{ blog.title }}</h4>
-                                        <p class="mt-1 text-[10px] text-gray-400">{{ formatDate(blog.created_at) }}</p>
-                                    </div>
-                                </article>
-                            </div>
+                            <article
+                                v-for="blog in blogs.slice(0, 3)"
+                                :key="blog.id"
+                                class="group mb-4 cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-white transition duration-300 hover:shadow-lg"
+                                @click="goToBlogDetail(blog.slug)"
+                            >
+                                <div class="h-28 overflow-hidden bg-gray-200">
+                                    <img
+                                        :src="blog.image"
+                                        class="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                                    />
+                                </div>
+                                <div class="p-3">
+                                    <p
+                                        class="mb-2 text-[10px] font-bold tracking-wider text-[#ff9c22] uppercase"
+                                    >
+                                        Thị trường
+                                    </p>
+                                    <h4
+                                        class="mb-2 line-clamp-2 text-sm font-bold text-gray-800 transition group-hover:text-[#ff9c22]"
+                                    >
+                                        {{ blog.title }}
+                                    </h4>
+                                    <p class="text-[11px] text-gray-500">
+                                        {{ formatDate(blog.created_at) }}
+                                    </p>
+                                </div>
+                            </article>
 
-                            <button class="mt-4 w-full rounded-md bg-[#ff9c22] py-2.5 text-[11px] font-semibold text-white transition hover:bg-orange-600">
-                                Xem tất cả tin tức
+                            <button
+                                class="w-full rounded-lg bg-gray-100 py-2.5 text-xs font-bold tracking-wider text-gray-800 uppercase transition duration-300 hover:bg-[#ff9c22] hover:text-white"
+                            >
+                                Tất cả bài viết
                             </button>
                         </div>
                     </aside>

@@ -29,12 +29,26 @@ const props = defineProps({
             per_page: 12,
         }),
     },
+    postsTab: {
+        type: String,
+        default: 'published',
+    },
+    postCounts: {
+        type: Object,
+        default: () => ({
+            published: 0,
+            waiting: 0,
+            draft: 0,
+            rejected: 0,
+        }),
+    },
 });
 
 const isGridView = ref(true);
 const isEditModalOpen = ref(false);
 const isUploadingAvatar = ref(false);
 const currentPage = ref(props.posts.current_page);
+const activePostsTab = ref(['waiting', 'draft', 'rejected'].includes(props.postsTab) ? props.postsTab : 'published');
 
 const form = useForm({
     name: props.profile.name ?? '',
@@ -224,7 +238,16 @@ const goToPage = (page) => {
     }
 
     currentPage.value = page;
-    window.location.href = `/profile?page=${page}`;
+    window.location.href = `/profile?tab=${activePostsTab.value}&page=${page}`;
+};
+
+const switchPostsTab = (tab) => {
+    if (tab === activePostsTab.value) {
+        return;
+    }
+
+    activePostsTab.value = tab;
+    window.location.href = `/profile?tab=${tab}`;
 };
 </script>
 
@@ -327,7 +350,7 @@ const goToPage = (page) => {
                                     <h3 class="text-base font-black text-slate-900">Tin đã đăng</h3>
                                     <p class="text-sm text-slate-500">Tổng cộng {{ props.posts.total }} tin</p>
                                 </div>
-                                <div v-if="props.hasActivePackage" class="flex rounded-2xl border border-slate-200 p-1">
+                                <div class="flex rounded-2xl border border-slate-200 p-1">
                                     <button
                                         type="button"
                                         @click="isGridView = true"
@@ -351,27 +374,75 @@ const goToPage = (page) => {
                                 </div>
                             </div>
 
-                            <div v-if="!props.hasActivePackage" class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
-                                    <i class="fa-solid fa-lock text-xl"></i>
-                                </div>
-                                <h4 class="mt-4 text-lg font-bold text-slate-900">Danh sách bài viết đang bị ẩn</h4>
-                                <p class="mx-auto mt-2 max-w-xl text-sm text-slate-600">
-                                    Hệ thống chỉ hiển thị bài đăng khi tài khoản có gói đăng tin còn hiệu lực. Vui lòng mua hoặc gia hạn gói để mở lại khu vực quản lý bài viết.
-                                </p>
+                            <div class="mt-5 flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    @click="switchPostsTab('published')"
+                                    :class="[
+                                        'inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition',
+                                        activePostsTab === 'published'
+                                            ? 'border-orange-200 bg-orange-50 text-orange-700'
+                                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50',
+                                    ]"
+                                >
+                                    Tin đã đăng
+                                    <span class="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-700">{{ props.postCounts.published || 0 }}</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="switchPostsTab('draft')"
+                                    :class="[
+                                        'inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition',
+                                        activePostsTab === 'draft'
+                                            ? 'border-orange-200 bg-orange-50 text-orange-700'
+                                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50',
+                                    ]"
+                                >
+                                    Bản nháp
+                                    <span class="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-700">{{ props.postCounts.draft || 0 }}</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="switchPostsTab('waiting')"
+                                    :class="[
+                                        'inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition',
+                                        activePostsTab === 'waiting'
+                                            ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50',
+                                    ]"
+                                >
+                                    Chờ duyệt
+                                    <span class="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-700">{{ props.postCounts.waiting || 0 }}</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="switchPostsTab('rejected')"
+                                    :class="[
+                                        'inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition',
+                                        activePostsTab === 'rejected'
+                                            ? 'border-rose-200 bg-rose-50 text-rose-700'
+                                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50',
+                                    ]"
+                                >
+                                    Bị từ chối
+                                    <span class="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-slate-700">{{ props.postCounts.rejected || 0 }}</span>
+                                </button>
                             </div>
 
                             <div
-                                v-else-if="props.posts.data.length"
+                                v-if="props.posts.data.length"
                                 class="mt-6 grid gap-4"
                                 :class="isGridView ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'"
                             >
                                 <article
                                     v-for="post in props.posts.data"
                                     :key="post.id"
-                                    class="overflow-hidden rounded-2xl border border-slate-200 transition hover:border-orange-200 hover:shadow-lg"
+                                    class="h-full overflow-hidden rounded-2xl border border-slate-200 transition hover:border-orange-200 hover:shadow-lg"
                                 >
-                                    <div :class="isGridView ? '' : 'flex flex-col sm:flex-row'">
+                                    <div :class="isGridView ? 'flex h-full flex-col' : 'flex h-full flex-col sm:flex-row'">
                                         <div :class="isGridView ? 'h-44 w-full' : 'h-44 w-full sm:w-64'" class="overflow-hidden bg-slate-100">
                                             <img
                                                 :src="resolveImageUrl(post.thumbnail) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'"
@@ -394,7 +465,7 @@ const goToPage = (page) => {
                                             </div>
                                             <div class="mt-3 space-y-1.5 text-sm text-slate-600">
                                                 <p><i class="fa-solid fa-ruler-combined mr-2 text-slate-400"></i>{{ post.area }} m2</p>
-                                                <p><i class="fa-solid fa-location-dot mr-2 text-slate-400"></i>{{ post.address }}</p>
+                                                <p class="truncate"><i class="fa-solid fa-location-dot mr-2 text-slate-400"></i>{{ post.address }}</p>
                                                 <p><i class="fa-regular fa-calendar mr-2 text-slate-400"></i>{{ post.created_at }}</p>
                                             </div>
                                             <a
@@ -406,6 +477,34 @@ const goToPage = (page) => {
                                         </div>
                                     </div>
                                 </article>
+                            </div>
+
+                            <div v-else class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
+                                    <i class="fa-solid fa-folder-open text-xl"></i>
+                                </div>
+                                <h4 class="mt-4 text-lg font-bold text-slate-900">
+                                    {{
+                                        activePostsTab === 'draft'
+                                            ? 'Bạn chưa có bản nháp nào'
+                                                                                        : activePostsTab === 'waiting'
+                                                                                            ? 'Bạn chưa có tin chờ duyệt nào'
+                                            : activePostsTab === 'rejected'
+                                              ? 'Bạn chưa có tin bị từ chối nào'
+                                              : 'Bạn chưa có tin đã đăng nào'
+                                    }}
+                                </h4>
+                                <p class="mx-auto mt-2 max-w-xl text-sm text-slate-600">
+                                    {{
+                                        activePostsTab === 'draft'
+                                            ? 'Các bài đã lưu nháp sẽ xuất hiện ở đây để bạn tiếp tục chỉnh sửa.'
+                                                                                        : activePostsTab === 'waiting'
+                                                                                            ? 'Các bài đang chờ duyệt sẽ xuất hiện ở đây, vui lòng đợi hệ thống kiểm duyệt.'
+                                            : activePostsTab === 'rejected'
+                                              ? 'Các bài bị từ chối sẽ xuất hiện ở đây để bạn chỉnh sửa rồi gửi duyệt lại.'
+                                                                                            : 'Các bài đã được duyệt và hiển thị sẽ xuất hiện ở đây để bạn quản lý.'
+                                    }}
+                                </p>
                             </div>
 
                             <div v-if="props.posts.data.length && props.posts.last_page > 1" class="mt-8 flex items-center justify-center gap-2">

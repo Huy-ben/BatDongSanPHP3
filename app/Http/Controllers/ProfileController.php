@@ -18,6 +18,10 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $page = $request->query('page', 1);
+        $postsTab = (string) $request->query('tab', 'published');
+        if (! in_array($postsTab, ['published', 'waiting', 'draft', 'rejected'], true)) {
+            $postsTab = 'published';
+        }
 
         $activePackage = ListingPackage::query()
             ->where('user_id', $user->id)
@@ -34,34 +38,69 @@ class ProfileController extends Controller
             'per_page' => 12,
         ];
 
-        if ($activePackage) {
-            $posts = Post::query()
-                ->with('thumbnailImage')
-                ->where('seller_id', $user->id)
-                ->whereIn('status', Post::STATUSES)
-                ->latest()
-                ->paginate(12, ['*'], 'page', $page);
+        $postCounts = [
+            'published' => 0,
+            'waiting' => 0,
+            'draft' => 0,
+            'rejected' => 0,
+        ];
 
-            $postsData = [
-                'data' => $posts->map(function (Post $post): array {
-                    return [
-                        'id' => $post->id,
-                        'title' => $post->title,
-                        'price' => (int) $post->price,
-                        'area' => (float) $post->area,
-                        'address' => $post->address,
-                        'status' => (string) $post->status,
-                        'created_at' => $post->created_at?->format('d/m/Y'),
-                        'thumbnail' => $post->thumbnailImage?->image_url,
-                        'edit_url' => route('post-edit', $post),
-                    ];
-                })->values()->all(),
-                'current_page' => $posts->currentPage(),
-                'last_page' => $posts->lastPage(),
-                'total' => $posts->total(),
-                'per_page' => $posts->perPage(),
-            ];
-        }
+        $baseQuery = Post::query()
+            ->with('thumbnailImage')
+            ->where('seller_id', $user->id);
+
+        $postCounts['draft'] = (clone $baseQuery)
+            ->where('status', Post::STATUS_DRAFT)
+            ->count();
+
+        $postCounts['published'] = (clone $baseQuery)
+            ->where('status', Post::STATUS_PUBLISHED)
+            ->count();
+
+        $postCounts['waiting'] = (clone $baseQuery)
+            ->where('status', Post::STATUS_WAITING)
+            ->count();
+
+        $postCounts['rejected'] = (clone $baseQuery)
+            ->where('status', Post::STATUS_REJECTED)
+            ->count();
+
+        $posts = (clone $baseQuery)
+            ->when(
+                $postsTab === 'draft',
+                fn ($query) => $query->where('status', Post::STATUS_DRAFT),
+                fn ($query) => $query->when(
+                    $postsTab === 'rejected',
+                    fn ($inner) => $inner->where('status', Post::STATUS_REJECTED),
+                    fn ($inner) => $inner->when(
+                        $postsTab === 'waiting',
+                        fn ($q) => $q->where('status', Post::STATUS_WAITING),
+                        fn ($q) => $q->where('status', Post::STATUS_PUBLISHED)
+                    )
+                )
+            )
+            ->latest()
+            ->paginate(12, ['*'], 'page', $page);
+
+        $postsData = [
+            'data' => $posts->map(function (Post $post): array {
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'price' => (int) $post->price,
+                    'area' => (float) $post->area,
+                    'address' => $post->address,
+                    'status' => (string) $post->status,
+                    'created_at' => $post->created_at?->format('d/m/Y'),
+                    'thumbnail' => $post->thumbnailImage?->image_url,
+                    'edit_url' => route('post-edit', $post),
+                ];
+            })->values()->all(),
+            'current_page' => $posts->currentPage(),
+            'last_page' => $posts->lastPage(),
+            'total' => $posts->total(),
+            'per_page' => $posts->perPage(),
+        ];
 
         return inertia('Client/Profile', [
             'profile' => [
@@ -73,6 +112,8 @@ class ProfileController extends Controller
             'hasActivePackage' => (bool) $activePackage,
             'activePackage' => $activePackage,
             'posts' => $postsData,
+            'postsTab' => $postsTab,
+            'postCounts' => $postCounts,
         ]);
     }
 

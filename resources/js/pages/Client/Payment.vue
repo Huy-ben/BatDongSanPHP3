@@ -33,6 +33,7 @@ const query = new URLSearchParams(window.location.search);
 const initialPlan = query.get('plan')?.toLowerCase();
 const selectedPlan = ref(plans[initialPlan] ? initialPlan : 'vip');
 const isRenewMode = query.get('renew') === '1';
+const isAutoRenewMode = query.get('auto_renew') === '1';
 const paymentStatus = query.get('status');
 const paymentReason = query.get('reason');
 
@@ -101,6 +102,12 @@ const formatCurrency = (value) => new Intl.NumberFormat('vi-VN').format(value) +
                     </p>
                     <p v-if="isRenewMode" class="mt-3 inline-flex rounded-full border border-orange-200 bg-white px-4 py-1 text-xs font-semibold text-orange-700">
                         Chế độ gia hạn: thanh toán sẽ cộng thêm 3 tháng cho gói hiện tại.
+                    </p>
+                    <p
+                        v-if="isAutoRenewMode"
+                        class="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700"
+                    >
+                        Tài khoản đang có gói còn hạn, hệ thống đã tự chuyển sang chế độ gia hạn để đảm bảo đúng logic.
                     </p>
                 </div>
             </section>
