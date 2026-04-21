@@ -50,7 +50,6 @@ class PostsResource extends Resource
         return [
             'index' => ListPosts::route('/'),
             'create' => CreatePosts::route('/create'),
-            'edit' => EditPosts::route('/{record}/edit'),
         ];
     }
 }

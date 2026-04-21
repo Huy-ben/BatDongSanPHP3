@@ -9,17 +9,24 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PostsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query
+                ->orderByRaw('case when status = ? then 0 else 1 end', [Post::STATUS_WAITING])
+                ->orderByDesc('created_at'))
             ->columns([
                 ImageColumn::make('thumbnailImage.image_url')
                     ->label('Ảnh')
@@ -69,7 +76,8 @@ class PostsTable
                 TextColumn::make('images_count')
                     ->label('Số ảnh')
                     ->counts('images')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('created_at')
                     ->label('Ngày tạo')
@@ -123,7 +131,53 @@ class PostsTable
                     ->requiresConfirmation()
                     ->visible(fn (Post $record): bool => $record->status === Post::STATUS_DRAFT)
                     ->action(fn (Post $record) => $record->update(['status' => Post::STATUS_WAITING])),
-                EditAction::make(),
+                Action::make('previewClient')
+                    ->label('Xem client')
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->url(fn (Post $record): string => route('post-detail', ['postIdentifier' => $record->slug]))
+                    ->openUrlInNewTab(),
+                EditAction::make()
+                    ->label('Sửa nhanh')
+                    ->icon('heroicon-o-pencil-square')
+                    ->modalHeading('Cập nhật bài đăng')
+                    ->modalDescription('Xem nhanh thông tin và đổi trạng thái ngay trong cửa sổ này.')
+                    ->modalWidth('4xl')
+                    ->modalSubmitActionLabel('Lưu thay đổi')
+                    ->form([
+                        Section::make('Thông tin nhanh')
+                            ->description('Các thông tin chính để admin duyệt nhanh trước khi đổi trạng thái.')
+                            ->columns(2)
+                            ->schema([
+                                Placeholder::make('post_title')
+                                    ->label('Tiêu đề')
+                                    ->content(fn (Post $record): string => (string) $record->title),
+                                Placeholder::make('post_seller')
+                                    ->label('Người bán')
+                                    ->content(fn (Post $record): string => (string) ($record->seller?->name ?? '-')),
+                                Placeholder::make('post_category')
+                                    ->label('Danh mục')
+                                    ->content(fn (Post $record): string => (string) ($record->category?->category_name ?? '-')),
+                                Placeholder::make('post_price')
+                                    ->label('Giá')
+                                    ->content(fn (Post $record): string => number_format((float) $record->price, 0, ',', '.') . ' đ'),
+                                Placeholder::make('post_area')
+                                    ->label('Diện tích')
+                                    ->content(fn (Post $record): string => rtrim(rtrim(number_format((float) $record->area, 2, '.', ''), '0'), '.') . ' m²'),
+                                Placeholder::make('post_address')
+                                    ->label('Địa chỉ')
+                                    ->content(fn (Post $record): string => (string) $record->address),
+                            ]),
+                        Select::make('status')
+                            ->label('Trạng thái')
+                            ->options([
+                                Post::STATUS_DRAFT => 'Bản nháp',
+                                Post::STATUS_PUBLISHED => 'Đã đăng',
+                                Post::STATUS_REJECTED => 'Bị từ chối',
+                                Post::STATUS_WAITING => 'Chờ duyệt',
+                            ])
+                            ->required(),
+                    ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
